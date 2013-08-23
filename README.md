@@ -46,6 +46,6 @@ There's not too much code yet, but bang.erl is set up to parse the incoming url 
 
 Also, note that there's no session control at this point...
 
-I'm using the erlang-rfc4627 library for JSON (available for download at https://github.com/tonyg/erlang-rfc4627) . I've included in the src/ directory for convendience. You'll need to compile and make sure the .beams are in the yaws path. I'm not doing much with it, but I have an example of encoding and decoding in the bang&#95;user.
+I'm using the erlang-rfc4627 library for JSON (download at https://github.com/tonyg/erlang-rfc4627) . You'll need to compile and make sure the .beams are in the yaws path. I'm not doing much with it, but I have an example of encoding and decoding in the bang&#95;user.
 
 Next, I'll start interfacing with postgres in order to do something real.
