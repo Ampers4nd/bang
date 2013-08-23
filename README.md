@@ -31,12 +31,11 @@ which will leave you with a very simple, unpopulated db:
 ###################
 YAWS:
 
-I've included the yaws.conf here for reference, but you should move it to the standard yaws.conf home, and of course change the paths as appropriate. The important bit of the conf file is the <server> block.
+I've included the yaws.conf here for reference, but you should move it to the standard yaws.conf home, and of course change the paths as appropriate. The important bit of the conf file is the &lt;server&gt; block. Check that the docroot and appmod are set correctly.
 
-Assuming you've set up the project in ~/code/bang, you add also need to add the following to ~/.erlang:
+Assuming you've set up the project in ~/code/bang, you need to compile the src and place the .beams in your erlang path. To do this, compile the your source, move the .beams to ebin/, and add the following line to ~/.erlang:
 
-    code:add_patha("/Users/youruser/code/bang/").
-    code:add_patha("/Users/youruser/code/bang/ebin").
+    code:add_patha("/path/to/home/code/bang/ebin").
 
 ###################
 ERLANG:
@@ -44,3 +43,9 @@ ERLANG:
 I'm running 64-bit Erlang R16B on Mac OS 10.8.4.
 
 There's not too much code yet, but bang.erl is set up to parse the incoming url and do some initial routing. Note that the teapot resource returns a 418. My initial model is that I've created a handler for three resources, each with a handle/2 method. handle/2 extracts the method and farms out the work. 
+
+Also, note that there's no session control at this point...
+
+I'm using the erlang-rfc4627 library for JSON (available for download at https://github.com/tonyg/erlang-rfc4627) . I've included in the src/ directory for convendience. You'll need to compile and make sure the .beams are in the yaws path. I'm not doing much with it, but I have an example of encoding and decoding in the bang&#95;user.
+
+Next, I'll start interfacing with postgres in order to do something real.
