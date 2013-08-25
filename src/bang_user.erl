@@ -20,19 +20,34 @@ handle(Arg, Path) ->
 	end.
 
 users(_Arg, _Path) ->
-	Something = "Ampersand",
-	SomethingElse = "Question Mark",
+	Something = "something",
+	SomethingElse = "something else",
 	Record = {obj, [{"something", list_to_binary(Something)},
-	{"somethingElse", list_to_binary(SomethingElse)}]},
+					{"somethingElse", list_to_binary(SomethingElse)}]},
 	Response = rfc4627:encode(Record),
 	[{status, 200},
 	{header, ["Content-Type:  ", "application/json"]},
 	{html, Response}].
 
 create_user(Arg, _Path) ->
-	Data = Arg#arg.clidata,
-	io:format("Decoded JSON: ~p~n", [rfc4627:decode(Data)]),
-	{status, 201}.
+	{ok, Json, _} = rfc4627:decode(Arg#arg.clidata),
+	{ok, Uname} = rfc4627:get_field(Json, "username"),
+	{ok, PW} = rfc4627:get_field(Json, "password"),
+	Conn = bang_utilities:dbConnection(),
+	InsertQuery = bang_utilities:insert_query("users", ["uname", "hash"], [binary_to_list(Uname), binary_to_list(PW)]), 
+	case pgsql:squery(Conn, InsertQuery) of
+		{ok, Count} ->
+			Record = {obj, [{"rows_inserted", integer_to_binary(Count)},
+							{"success", list_to_binary("true")}]},
+			Response = rfc4627:encode(Record),
+			[{html, Response},
+			bang_utilities:json_header(), 
+			{status, 201}];
+		{error, Error} ->
+			error_logger:info_msg("~p:~p Insert failed: Insert Query: ~p~n Response:~p~n", [?MODULE, ?LINE, InsertQuery, Error]),
+			[bang_utilities:json_header(), 
+			{status, 500}]
+	end.
 
 update_user(_Arg, _Path) ->
 	{status, 501}.
