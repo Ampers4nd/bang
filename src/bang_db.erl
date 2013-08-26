@@ -20,11 +20,20 @@ insertUser(Uname, Hash) ->
 			Response = rfc4627:encode(Record),
 			[{html, Response},
 			bang_utilities:json_header(), 
-			{status, 201}];
+			{status, 200}];
 		{error, Error} ->
 			error_logger:info_msg("~p:~p Insert failed: Insert Query: ~s~n Response:~p~n", [?MODULE, ?LINE, InsertQuery, Error]),
-			[bang_utilities:json_header(), 
-			{status, 500}]
+			case Error of 
+				{error, error, <<"23505">>, _, _} ->
+					Record = {obj, [{"success", list_to_binary("false"),
+									{"reason", "Username already exists"}}]},
+							Response = rfc4627:encode(Record),
+							[{html, Response},
+							bang_utilities:json_header(), 
+							{status, 200}];
+				_ ->
+					{status, 400}
+			end
 	end.
 
 insertQuery(Table, Columns, Values) ->
