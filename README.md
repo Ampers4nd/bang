@@ -46,6 +46,21 @@ There's not too much code yet, but bang.erl is set up to parse the incoming url 
 
 Also, note that there's no session control at this point...
 
-I'm using the erlang-rfc4627 library for JSON (download at https://github.com/tonyg/erlang-rfc4627) . You'll need to compile and make sure the .beams are in the yaws path. I'm not doing much with it, but I have an example of encoding and decoding in the bang&#95;user.
+I've set up a create user resource, which can be tested with curl:
 
-Next, I'll start interfacing with postgres in order to do something real.
+curl -v -X POST -H "Content-Type: application/json" -d '{"username":"abc","password":"xyz"}' --user foo:bar http://localhost:8000/user
+
+This simply inserts the username and the sha of the password. I've moved the db interaction to a separate module, so that I can easily replace postgres with another db solution down the line. I've added a helper class that wraps the crypto calls and converts the binary to hexadecimal strings that behave nicely with postgres.
+
+Still no session control...
+
+###################
+DEPENDENCIES:
+
+I'm running 64-bit Erlang R16B on Mac OS 10.8.4 with yaws 1.96 and postgres 9.2.4.
+
+The code also requires the following erlang libraries:
+
+1) erlang-rfc4627 (download at https://github.com/tonyg/erlang-rfc4627)
+
+2) epgsql (https://github.com/wg/epgsql)

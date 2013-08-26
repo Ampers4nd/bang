@@ -33,21 +33,9 @@ create_user(Arg, _Path) ->
 	{ok, Json, _} = rfc4627:decode(Arg#arg.clidata),
 	{ok, Uname} = rfc4627:get_field(Json, "username"),
 	{ok, PW} = rfc4627:get_field(Json, "password"),
-	Conn = bang_utilities:dbConnection(),
-	InsertQuery = bang_utilities:insert_query("users", ["uname", "hash"], [binary_to_list(Uname), binary_to_list(PW)]), 
-	case pgsql:squery(Conn, InsertQuery) of
-		{ok, Count} ->
-			Record = {obj, [{"rows_inserted", integer_to_binary(Count)},
-							{"success", list_to_binary("true")}]},
-			Response = rfc4627:encode(Record),
-			[{html, Response},
-			bang_utilities:json_header(), 
-			{status, 201}];
-		{error, Error} ->
-			error_logger:info_msg("~p:~p Insert failed: Insert Query: ~p~n Response:~p~n", [?MODULE, ?LINE, InsertQuery, Error]),
-			[bang_utilities:json_header(), 
-			{status, 500}]
-	end.
+	Hash = bang_crypto:sha512(PW), 
+	error_logger:info_msg("PW Hash: ~s~n", [Hash]), 
+	bang_db:insertUser(binary_to_list(Uname), Hash).
 
 update_user(_Arg, _Path) ->
 	{status, 501}.
