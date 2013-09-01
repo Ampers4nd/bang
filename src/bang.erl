@@ -7,6 +7,7 @@ out(Arg) ->
     handle(Arg).
 
 handle(Arg) ->
+	error_logger:info_msg("Entry point..."), 
 	Path = bang_utilities:path(Arg#arg.pathinfo),
 	case Path of
 		[] ->
@@ -20,6 +21,8 @@ handle(Arg) ->
 			            bang_room:handle(Arg, Rest);
 		        "message" ->
 		                bang_message:handle(Arg, Rest);
+		        "socket" ->
+		        		bang_socket:handle(Arg, Rest);
 		        "teapot" ->
 		        	{status, 418};
 		        "thc" ->

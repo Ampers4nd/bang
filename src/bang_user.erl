@@ -6,39 +6,38 @@
 handle(Arg, Path) ->
 	case bang_utilities:method(Arg) of 
 		'GET' ->
-			users(Arg, Path);
+			getUser(Arg, Path);
 		'POST' -> 
-			create_user(Arg, Path);
+			createUser(Arg, Path);
 		'PUT' ->
-			update_user(Arg, Path);
+			updateUser(Arg, Path);
 		'DELETE' ->
-			delete_user(Arg, Path);
+			deleteUser(Arg, Path);
 		'HEAD' ->
 			{status, 204};
 		_ ->
 			{status, 405}
 	end.
 
-users(_Arg, _Path) ->
-	Something = "something",
-	SomethingElse = "something else",
-	Record = {obj, [{"something", list_to_binary(Something)},
-					{"somethingElse", list_to_binary(SomethingElse)}]},
-	Response = rfc4627:encode(Record),
-	[{status, 200},
-	{header, ["Content-Type:  ", "application/json"]},
-	{html, Response}].
+getUser(Arg, _Path) ->
+	Params = yaws_api:parse_query(Arg),
+	error_logger:info_msg("~p~p User parameters~n", [?MODULE, ?LINE, Params]) ,
+	{ok, User} = yaws_api:queryvar(Arg, "user"),
+	error_logger:info_msg("~p~p User: ~s~n", [?MODULE, ?LINE, User]), 	
+	{ok, PW} = yaws_api:queryvar(Arg, "pw"),
+	error_logger:info_msg("~p~p PW: ~s~n", [?MODULE, ?LINE, PW]), 		
+	bang_db:getUser(User, bang_crypto:hash(PW)). 
 
-create_user(Arg, _Path) ->
+createUser(Arg, _Path) ->
 	{ok, Json, _} = rfc4627:decode(Arg#arg.clidata),
 	{ok, Uname} = rfc4627:get_field(Json, "username"),
 	{ok, PW} = rfc4627:get_field(Json, "password"),
-	Hash = bang_crypto:sha512(PW), 
+	Hash = bang_crypto:hash(PW), 
 	error_logger:info_msg("PW Hash: ~s~n", [Hash]), 
 	bang_db:insertUser(binary_to_list(Uname), Hash).
 
-update_user(_Arg, _Path) ->
+updateUser(_Arg, _Path) ->
 	{status, 501}.
 
-delete_user(_Arg, _Path) ->
+deleteUser(_Arg, _Path) ->
 	{status, 501}.

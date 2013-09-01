@@ -12,7 +12,7 @@
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     uname varchar(64) UNIQUE,
-    hash char(256)
+    pw_hash char(128)
 );
  
 CREATE TABLE rooms (
