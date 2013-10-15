@@ -38,9 +38,10 @@ insertUser(Uname, Hash) ->
 	end.
 
 getUser(UnameToCheck, HashToCheck) ->
+	error_logger:info_msg("Retrieving user..."), 
 	Conn = dbConnection(),
 	SelectQuery = selectUserQuery("users", ["uname"], UnameToCheck, HashToCheck),
-	error_logger:info_msg("Select Query: ~s~n", [SelectQuery]),
+	% error_logger:info_msg("Select Query: ~s~n", [SelectQuery]),
 	case pgsql:squery(Conn, SelectQuery) of
 		{ok, _Columns, Rows} ->
 			case length(Rows) of
@@ -59,22 +60,25 @@ getUser(UnameToCheck, HashToCheck) ->
 							{"success", <<"false">>}]},
 					Response = rfc4627:encode(Record),
 					[{html, Response},
-						bang_utiliites:json_header(),
+						{header, ["Content-Type:  ", "application/json"]},
+						bang_utilities:json_header(),
 						{status, 401}];
 				_ ->
 					Record = {obj, [{"message", <<"Ambiguous db response">>},
 							{"success", <<"false">>}]},
 					Response = rfc4627:encode(Record),
 					[{html, Response},
-						bang_utiliites:json_header(),
+						{header, ["Content-Type:  ", "application/json"]},
+						bang_utilities:json_header(),
 						{status, 500}]
 			end;
 		_ ->
+			error_logger:info_msg("DB access failed :-(~n"),
 			Record = {obj, [{"message", <<"DB access failed">>},
 							{"success", <<"false">>}]},
 			Response = rfc4627:encode(Record),
 			[{html, Response},
-				bang_utiliites:json_header(),
+				bang_utilities:json_header(),
 				{status, 500}]
 	end.
 

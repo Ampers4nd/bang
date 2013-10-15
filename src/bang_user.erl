@@ -20,10 +20,10 @@ handle(Arg, Path) ->
 	end.
 
 getUser(Arg, _Path) ->
-	% Params = yaws_api:parse_query(Arg),
 	{ok, User} = yaws_api:queryvar(Arg, "user"),
 	{ok, PW} = yaws_api:queryvar(Arg, "pw"),
-	bang_db:getUser(User, bang_crypto:hash(PW)). 
+	Response = bang_db:getUser(User, bang_crypto:hash(PW)),
+	Response. 
 
 createUser(Arg, _Path) ->
 	{ok, Json, _} = rfc4627:decode(Arg#arg.clidata),

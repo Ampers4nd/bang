@@ -46,7 +46,7 @@ There's not too much code yet, but bang.erl is set up to parse the incoming url 
 
 Also, note that there's no session control at this point...
 
-I've set up a create user resource, which can be tested with curl (the GET call with bad credentials is not handled very gracefully at present).
+I've set up a create user resource, which can be tested with curl as follows:
 
 Create new user: curl -v -X POST -H "Content-Type: application/json" -d '{"username":"abc","password":"xyz"}' --user foo:bar http://localhost:8000/user
 
