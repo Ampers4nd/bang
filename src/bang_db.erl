@@ -12,7 +12,7 @@ dbConnection() ->
 insertUser(Uname, Hash) ->
 	error_logger:info_msg("Inserting user..."), 
 	Conn = dbConnection(),
-	InsertQuery = insertQuery("users", ["uname", "hash"], [Uname, Hash]), 
+	InsertQuery = insertQuery("users", ["uname", "pw_hash"], [Uname, Hash]), 
 	error_logger:info_msg("Insert Query: ~s~n", [InsertQuery]), 
 	case pgsql:squery(Conn, InsertQuery) of
 		{ok, Count} ->

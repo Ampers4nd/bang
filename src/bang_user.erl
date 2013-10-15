@@ -20,12 +20,9 @@ handle(Arg, Path) ->
 	end.
 
 getUser(Arg, _Path) ->
-	Params = yaws_api:parse_query(Arg),
-	error_logger:info_msg("~p~p User parameters~n", [?MODULE, ?LINE, Params]) ,
+	% Params = yaws_api:parse_query(Arg),
 	{ok, User} = yaws_api:queryvar(Arg, "user"),
-	error_logger:info_msg("~p~p User: ~s~n", [?MODULE, ?LINE, User]), 	
 	{ok, PW} = yaws_api:queryvar(Arg, "pw"),
-	error_logger:info_msg("~p~p PW: ~s~n", [?MODULE, ?LINE, PW]), 		
 	bang_db:getUser(User, bang_crypto:hash(PW)). 
 
 createUser(Arg, _Path) ->
@@ -33,7 +30,6 @@ createUser(Arg, _Path) ->
 	{ok, Uname} = rfc4627:get_field(Json, "username"),
 	{ok, PW} = rfc4627:get_field(Json, "password"),
 	Hash = bang_crypto:hash(PW), 
-	error_logger:info_msg("PW Hash: ~s~n", [Hash]), 
 	bang_db:insertUser(binary_to_list(Uname), Hash).
 
 updateUser(_Arg, _Path) ->

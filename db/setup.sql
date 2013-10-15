@@ -9,12 +9,38 @@
 --
 --------------
 
+CREATE TYPE user_type AS ENUM ('bang', 'fb', 'gp', 'yahoo');
+
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     uname varchar(64) UNIQUE,
+    user_type user_type DEFAULT 'bang',
     pw_hash char(128)
 );
- 
+CREATE INDEX users_user_type ON users USING btree(user_type);
+
+CREATE TYPE gender AS ENUM ('m', 'f', 'na');
+CREATE TABLE user_info (
+    email varchar(128) UNIQUE,
+    nickname varchar(32) UNIQUE,
+    dob timestamp,
+    gender gender DEFAULT 'na',
+    user_id REFERENCES users
+);
+CREATE INDEX user_info_dob ON user_info USING btree(dob);
+CREATE INDEX user_info_gender ON user_info USING btree(gender);
+
+CREATE TABLE user_stats (
+    user_id REFERENCES users,
+    token char(32),
+    device_id varchar(32),
+    ip_address inet,
+    issued timestamp,
+    expires timestamp
+);
+CREATE INDEX user_stats_token ON user_stats USING hash(token);
+CREATE INDEX user_stats_expires ON user_stats USING btree(expires);
+
 CREATE TABLE rooms (
     room_id SERIAL PRIMARY KEY,
     room_name varchar(64),

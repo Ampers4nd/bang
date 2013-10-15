@@ -40,15 +40,17 @@ Assuming you've set up the project in ~/code/bang, you need to compile the src a
 ###################
 ERLANG:
 
-I'm running 64-bit Erlang R16B on Mac OS 10.8.4.
+I'm running 64-bit Erlang R16B on Mac OS 10.8.5.
 
 There's not too much code yet, but bang.erl is set up to parse the incoming url and do some initial routing. Note that the teapot resource returns a 418. My initial model is that I've created a handler for three resources, each with a handle/2 method. handle/2 extracts the method and farms out the work. 
 
 Also, note that there's no session control at this point...
 
-I've set up a create user resource, which can be tested with curl:
+I've set up a create user resource, which can be tested with curl (the GET call with bad credentials is not handled very gracefully at present).
 
-curl -v -X POST -H "Content-Type: application/json" -d '{"username":"abc","password":"xyz"}' --user foo:bar http://localhost:8000/user
+Create new user: curl -v -X POST -H "Content-Type: application/json" -d '{"username":"abc","password":"xyz"}' --user foo:bar http://localhost:8000/user
+
+Retrieve user: curl -v --user foo:bar "http://localhost:8000/user?user=abc&pw=xyz"
 
 This simply inserts the username and the sha of the password. I've moved the db interaction to a separate module, so that I can easily replace postgres with another db solution down the line. I've added a helper class that wraps the crypto calls and converts the binary to hexadecimal strings that behave nicely with postgres.
 
@@ -57,7 +59,7 @@ Still no session control...
 ###################
 DEPENDENCIES:
 
-I'm running 64-bit Erlang R16B on Mac OS 10.8.4 with yaws 1.96 and postgres 9.2.4.
+I'm running 64-bit Erlang R16B on Mac OS 10.8.5 with yaws 1.96 and postgres 9.2.4.
 
 The code also requires the following erlang libraries:
 
