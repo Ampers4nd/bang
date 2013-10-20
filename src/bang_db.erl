@@ -1,90 +1,53 @@
 -module(bang_db).
--export([insertUser/2, getUser/2]).
+-export([doInsert/1, getUser/1]).
 
-dbConnection() ->
-	case pgsql:connect("localhost", [{database, "bang"}]) of
-		{ok, Conn} ->
-			Conn;
-		_ ->
-			error
-	end.
+url() -> "http://localhost:5984/bang/".
+contentType() -> "application/json".
 
-insertUser(Uname, Hash) ->
-	error_logger:info_msg("Inserting user..."), 
-	Conn = dbConnection(),
-	InsertQuery = insertQuery("users", ["uname", "pw_hash"], [Uname, Hash]), 
-	error_logger:info_msg("Insert Query: ~s~n", [InsertQuery]), 
-	case pgsql:squery(Conn, InsertQuery) of
-		{ok, Count} ->
-			Record = {obj, [{"rows_inserted", integer_to_binary(Count)},
-							{"success", <<"true">>}]},
-			Response = rfc4627:encode(Record),
-			[{html, Response},
-			bang_utilities:json_header(), 
-			{status, 200}];
-		{error, Error} ->
-			error_logger:info_msg("~p:~p Insert failed: Insert Query: ~s~n Response:~p~n", [?MODULE, ?LINE, InsertQuery, Error]),
-			case Error of 
-				{error, error, <<"23505">>, _, _} ->
-					Record = {obj, [{"success", <<"false">>},
-							{"message", <<"Username already exists">>}]},
-							Response = rfc4627:encode(Record),
-							[{html, Response},
-							bang_utilities:json_header(), 
-							{status, 200}];
+getRequest(UID) ->
+	error_logger:info_msg("Doing get..."), 
+	Header = [],
+	HTTPOptions = [],
+	Options = [],
+	URL = url() ++ UID,
+	error_logger:info_msg("URL: ~p~n", [URL]), 
+	httpc:request(get, {URL, Header}, HTTPOptions, Options).
+
+postRequest(Body) ->
+	Header = [],
+	HTTPOptions = [],
+	Options = [],
+	httpc:request(post, {url(), Header, contentType(), rfc4627:encode(Body)}, HTTPOptions, Options).
+
+doInsert(Body) ->
+	Request = postRequest(Body),
+	case Request of
+		{ok, {{_Version, ResponseCode, _ReasonPhrase}, _Headers, ResponseBody}} ->
+			case ResponseCode of
+				201 ->
+					RBBin = list_to_binary(ResponseBody),
+					{ok, EncodedJSON, _} = rfc4627:decode(RBBin),
+					{ok, UID} = rfc4627:get_field(EncodedJSON, "id"),
+					Record = {obj, [{"success", <<"true">>},
+									{"id", UID}]},
+					Response = rfc4627:encode(Record),
+					[{html, Response},
+					 bang_utilities:json_header(),
+					 {status, ResponseCode}];
 				_ ->
-					{status, 400}
-			end
+					error_logger:error_msg("DB post returned unexpected response code: ~p~n", [Request]),
+					{status, ResponseCode}
+				end;
+		_ ->
+			error_logger:error_msg("DB post failed: Request: ~p~n", [Request]) 
 	end.
 
-getUser(UnameToCheck, HashToCheck) ->
+getUser(UID) ->
 	error_logger:info_msg("Retrieving user..."), 
-	Conn = dbConnection(),
-	SelectQuery = selectUserQuery("users", ["uname"], UnameToCheck, HashToCheck),
-	% error_logger:info_msg("Select Query: ~s~n", [SelectQuery]),
-	case pgsql:squery(Conn, SelectQuery) of
-		{ok, _Columns, Rows} ->
-			case length(Rows) of
-				1 ->
-					[{Uname}] = Rows,  %Uname is returned as a binary
-					Record = {obj, [{"user", Uname},
-							{"token", bang_crypto:randomString(64)},
-							{"success", <<"true">>}]},
-					Response = rfc4627:encode(Record),
-					[{html, Response},
-						{header, ["Content-Type:  ", "application/json"]},
-						bang_utilities:json_header(),
-						{status, 200}];
-				0 ->
-					Record = {obj, [{"message", <<"Invalid credentials">>},
-							{"success", <<"false">>}]},
-					Response = rfc4627:encode(Record),
-					[{html, Response},
-						{header, ["Content-Type:  ", "application/json"]},
-						bang_utilities:json_header(),
-						{status, 401}];
-				_ ->
-					Record = {obj, [{"message", <<"Ambiguous db response">>},
-							{"success", <<"false">>}]},
-					Response = rfc4627:encode(Record),
-					[{html, Response},
-						{header, ["Content-Type:  ", "application/json"]},
-						bang_utilities:json_header(),
-						{status, 500}]
-			end;
+	Request = getRequest(UID),
+	case Request of
+		{ok, {{_Version, ResponseCode, _ReasonPhrase}, _Headers, _Body}} ->
+			{status, ResponseCode};
 		_ ->
-			error_logger:info_msg("DB access failed :-(~n"),
-			Record = {obj, [{"message", <<"DB access failed">>},
-							{"success", <<"false">>}]},
-			Response = rfc4627:encode(Record),
-			[{html, Response},
-				bang_utilities:json_header(),
-				{status, 500}]
+			{status, 400}
 	end.
-
-
-insertQuery(Table, Columns, Values) ->
-	"INSERT INTO " ++ Table ++ " (" ++ string:join(Columns, ", ") ++ ") " ++ " VALUES ('"  ++ string:join(Values, "', '") ++ "')".
-
-selectUserQuery(Table, Columns, Uname, Hash) ->
-	"SELECT " ++ string:join(Columns, ", ") ++ " FROM " ++ Table ++ " WHERE uname LIKE '" ++ Uname ++ "' AND pw_hash LIKE '" ++ Hash ++ "'". 

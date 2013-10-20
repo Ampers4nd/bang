@@ -1,34 +1,44 @@
 bang
 ====
 
-###################
-SQL:
+####################
+#SQL:
+#
+#I've set up a postgres SQL database for now. I'll probably switch over to some NoSQL option soon, but let's take care of one thing at a time.
+#
+#Once you've installed postgres, you can from the command line:
+#
+#createdb bang
+#
+#Then launch psql, and: \i /path/to/setup.sql
+#
+#which will leave you with a very simple, unpopulated db:
+#
+#    bang=# \d
+#                      List of relations
+#     Schema |          Name           |   Type   | Owner  
+#    --------+-------------------------+----------+--------
+#     public | messages                | table    | eschow
+#     public | messages_message_id_seq | sequence | eschow
+#     public | room_user               | table    | eschow
+#     public | rooms                   | table    | eschow
+#     public | rooms_room_id_seq       | sequence | eschow
+#     public | user_location           | table    | eschow
+#     public | users                   | table    | eschow
+#     public | users_user_id_seq       | sequence | eschow
+#    (8 rows)
+#
+####################
 
-I've set up a postgres SQL database for now. I'll probably switch over to some NoSQL option soon, but let's take care of one thing at a time.
+####################
+CouchDB:
 
-Once you've installed postgres, you can from the command line:
+I've swiched out the DB model. I now assume CouchDB running on port 5894. I'll add some details later. 
 
-createdb bang
+####################
 
-Then launch psql, and: \i /path/to/setup.sql
 
-which will leave you with a very simple, unpopulated db:
 
-    bang=# \d
-                      List of relations
-     Schema |          Name           |   Type   | Owner  
-    --------+-------------------------+----------+--------
-     public | messages                | table    | eschow
-     public | messages_message_id_seq | sequence | eschow
-     public | room_user               | table    | eschow
-     public | rooms                   | table    | eschow
-     public | rooms_room_id_seq       | sequence | eschow
-     public | user_location           | table    | eschow
-     public | users                   | table    | eschow
-     public | users_user_id_seq       | sequence | eschow
-    (8 rows)
-
-###################
 YAWS:
 
 I've included the yaws.conf here for reference, but you should move it to the standard yaws.conf home, and of course change the paths as appropriate. The important bit of the conf file is the &lt;server&gt; block. Check that the docroot and appmod are set correctly.

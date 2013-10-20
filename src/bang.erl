@@ -15,7 +15,8 @@ handle(Arg) ->
 		_ ->
 			[Root | Rest] = Path, 
 			case string:to_lower(Root) of 
-				"user" ->
+				"form-register-enterprise" ->
+						error_logger:info_msg("Processing user request..."),
 			        	bang_user:handle(Arg, Rest); 
 			    "room" ->
 			            bang_room:handle(Arg, Rest);
