@@ -1,34 +1,36 @@
 bang
 ====
 
+<!--
 ####################
-#SQL:
-#
-#I've set up a postgres SQL database for now. I'll probably switch over to some NoSQL option soon, but let's take care of one thing at a time.
-#
-#Once you've installed postgres, you can from the command line:
-#
-#createdb bang
-#
-#Then launch psql, and: \i /path/to/setup.sql
-#
-#which will leave you with a very simple, unpopulated db:
-#
-#    bang=# \d
-#                      List of relations
-#     Schema |          Name           |   Type   | Owner  
-#    --------+-------------------------+----------+--------
-#     public | messages                | table    | eschow
-#     public | messages_message_id_seq | sequence | eschow
-#     public | room_user               | table    | eschow
-#     public | rooms                   | table    | eschow
-#     public | rooms_room_id_seq       | sequence | eschow
-#     public | user_location           | table    | eschow
-#     public | users                   | table    | eschow
-#     public | users_user_id_seq       | sequence | eschow
-#    (8 rows)
-#
-####################
+SQL:
+
+I've set up a postgres SQL database for now. I'll probably switch over to some NoSQL option soon, but let's take care of one thing at a time.
+
+Once you've installed postgres, you can from the command line:
+
+createdb bang
+
+Then launch psql, and: \i /path/to/setup.sql
+
+which will leave you with a very simple, unpopulated db:
+
+    bang=# \d
+                      List of relations
+     Schema |          Name           |   Type   | Owner  
+    --------+-------------------------+----------+--------
+     public | messages                | table    | eschow
+     public | messages_message_id_seq | sequence | eschow
+     public | room_user               | table    | eschow
+     public | rooms                   | table    | eschow
+     public | rooms_room_id_seq       | sequence | eschow
+     public | user_location           | table    | eschow
+     public | users                   | table    | eschow
+     public | users_user_id_seq       | sequence | eschow
+    (8 rows)
+
+###################
+-->
 
 ####################
 CouchDB:
