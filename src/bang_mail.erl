@@ -7,7 +7,7 @@ validationBCC() -> bang_private:mailFromValidation().
 validationSubject() -> "Whoa...".
 validationMessage() -> "Look out behind you!!!".
 
-url() -> "https://api.mailgun.net/v2/" ++ bang_private:domain() ++ "/messages".
+url() -> "https://api.mailgun.net/v2/" ++ bang_private:mailDomain() ++ "/messages".
 
 sendValidation(To) ->
 	sendMail(bang_private:mailFromValidation(), To, validationCC(), validationBCC(), validationSubject(), validationMessage()).

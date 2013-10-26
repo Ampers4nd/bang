@@ -1,13 +1,16 @@
 -module(bang_json).
 
--export([encodedJson/1]).
+-export([encodedJson/1, contentType/0]).
+
+contentType() -> 
+	error_logger:info_msg("json content type...."),
+	"application/json".
 
 encodedJson(Fields) ->
-	error_logger:info_msg("Received JSON request with fields: ~p~n", [Fields]),
 	encodedJson(Fields, []).
 
 encodedJson([], Acc) ->  
-	Record = {obj, Acc},
+	Record = {obj, lists:reverse(Acc)},
 	rfc4627:encode(Record);
 encodedJson(Fields, Acc) ->
 	[{Key, Value} | Tail] = Fields,

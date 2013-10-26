@@ -4,7 +4,6 @@
 -export([handle/2]).
 
 handle(Arg, Path) ->
-	error_logger:info_msg("X0"),
 	case bang_utilities:method(Arg) of 
 		'GET' ->
 			getUser(Arg, Path);
@@ -26,7 +25,10 @@ getUser(Arg, _Path) ->
 
 createUser(Arg, _Path) ->
 	{ok, Json, _} = rfc4627:decode(Arg#arg.clidata),
-	bang_db:doInsert(Json).
+	Record = {obj, [{"user_type", <<"0">>}, %% user_type 0 -> not validated
+	                {"data", Json}]},
+	error_logger:info_msg("Record: ~p~n", [Record]),
+	bang_db:doInsert(Record).
 
 updateUser(_Arg, _Path) ->
 	{status, 501}.

@@ -2,7 +2,7 @@
 -export([doInsert/1, getUser/1]).
 
 url() -> "http://localhost:5984/bang/".
-contentType() -> "application/json".
+% contentType() -> "application/json".
 
 getRequest(UID) ->
 	error_logger:info_msg("Doing get..."), 
@@ -13,22 +13,23 @@ getRequest(UID) ->
 	error_logger:info_msg("URL: ~p~n", [URL]), 
 	httpc:request(get, {URL, Header}, HTTPOptions, Options).
 
-postRequest(Body) ->
-	Header = [],
-	HTTPOptions = [],
-	Options = [],
-	httpc:request(post, {url(), Header, contentType(), rfc4627:encode(Body)}, HTTPOptions, Options).
-
 doInsert(Body) ->
-	Request = postRequest(Body),
+	JSONEncodedBody = rfc4627:encode(Body),
+	error_logger:info_msg("Body: ~p~n", [Body]), 
+	{ok, UserType} = rfc4627:get_field(Body, "user_type"),
+	error_logger:info_msg("Doing insert. JSON: ~p~n", [JSONEncodedBody]), 
+	Request = bang_http:post(url(), JSONEncodedBody),
+	error_logger:info_msg("Received response: ~p~n", [Request]),
 	case Request of
 		{ok, {{_Version, ResponseCode, _ReasonPhrase}, _Headers, ResponseBody}} ->
 			case ResponseCode of
 				201 ->
-					{ok, EncodedJSON, _} = rfc4627:decode(list_to_binary(ResponseBody)),
-					{ok, UID} = rfc4627:get_field(EncodedJSON, "id"),
+					{ok, JSONResponse, _} = rfc4627:decode(list_to_binary(ResponseBody)),
+					error_logger:info_msg("JSON Response: ~p~n", [JSONResponse]), 
+					{ok, UID} = rfc4627:get_field(JSONResponse, "id"),
 					Record = {obj, [{"success", <<"true">>},
-									{"id", UID}]},
+									{"val_id", UID},
+									{"user_type", UserType}]},
 					Response = rfc4627:encode(Record),
 					[{html, Response},
 					 bang_utilities:json_header(),
