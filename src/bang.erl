@@ -8,6 +8,8 @@ out(Arg) ->
 
 handle(Arg) ->
 	error_logger:info_msg("Entry point..."), 
+    error_logger:info_msg("Arg: ~p~n", [Arg]), 
+    error_logger:info_msg("Path info: ~p~n", [Arg#arg.pathinfo]),	
 	Path = bang_utilities:path(Arg#arg.pathinfo),
 	case Path of
 		[] ->

@@ -25,8 +25,7 @@ doInsert(Body) ->
 		{ok, {{_Version, ResponseCode, _ReasonPhrase}, _Headers, ResponseBody}} ->
 			case ResponseCode of
 				201 ->
-					RBBin = list_to_binary(ResponseBody),
-					{ok, EncodedJSON, _} = rfc4627:decode(RBBin),
+					{ok, EncodedJSON, _} = rfc4627:decode(list_to_binary(ResponseBody)),
 					{ok, UID} = rfc4627:get_field(EncodedJSON, "id"),
 					Record = {obj, [{"success", <<"true">>},
 									{"id", UID}]},

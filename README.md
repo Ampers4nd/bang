@@ -37,9 +37,9 @@ CouchDB:
 
 I've swiched out the DB model. I now assume CouchDB running on port 5894. I'll add some details later. 
 
+The default couchdb has it listening only to requests made from the local environment. Before deploying for remote access, couch will need to be configured to restrict access.
+
 ####################
-
-
 
 YAWS:
 
@@ -48,6 +48,10 @@ I've included the yaws.conf here for reference, but you should move it to the st
 Assuming you've set up the project in ~/code/bang, you need to compile the src and place the .beams in your erlang path. To do this, compile the your source, move the .beams to ebin/, and add the following line to ~/.erlang:
 
     code:add_patha("/path/to/home/code/bang/ebin").
+
+The yaws record definitions are in /$BANG_DIR/include/yaws_api.hrl
+
+I've removed this from the commit log, because these definitions are not stable across yaws versions. In particular, the definitions have changed between yaws v1.96 and v1.97. 
 
 ###################
 ERLANG:
@@ -60,13 +64,14 @@ Also, note that there's no session control at this point...
 
 I've set up a create user resource, which can be tested with curl as follows:
 
-Create new user: curl -v -X POST -H "Content-Type: application/json" -d '{"username":"abc","password":"xyz"}' --user foo:bar http://localhost:8000/user
 
-Retrieve user: curl -v --user foo:bar "http://localhost:8000/user?user=abc&pw=xyz"
 
+<!--
+Create new user: curl -v -X POST -H "Content-Type: application/json" -d '{"username":"abc","password":"xyz"}' http://localhost:8000/user
+
+Retrieve user: curl -v "http://localhost:8000/user?user=abc&pw=xyz"
 This simply inserts the username and the sha of the password. I've moved the db interaction to a separate module, so that I can easily replace postgres with another db solution down the line. I've added a helper class that wraps the crypto calls and converts the binary to hexadecimal strings that behave nicely with postgres.
-
-Still no session control...
+-->
 
 ###################
 DEPENDENCIES:
