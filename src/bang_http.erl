@@ -1,6 +1,6 @@
 -module(bang_http).
 
--export([get/1, get/3, post/2, post/4]).
+-export([get/1, get/3, head/1, put/2, post/2, post/4]).
 
 auth_header(User, PW) ->
     Encoded = base64:encode_to_string(lists:append([User,":",PW])),
@@ -28,6 +28,19 @@ post(URL, Body) ->
 
 post(User, PW, URL, Body) ->
 	request(post, User, PW, URL, Body).
+
+put(URL, Body) ->
+		httpc:request(put, 
+					{URL, headers(json), bang_json:contentType(), Body},
+		 			httpOptions(), 
+		 			options()). 
+
+
+head(URL) ->
+	httpc:request(head,
+					{URL, []},
+					[],
+					[]).
 
 request(get, User, PW, URL, _Body) ->
 	httpc:request(get, 

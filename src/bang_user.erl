@@ -24,14 +24,15 @@ getUser(Arg, _Path) ->
 	bang_db:getUser(UID).
 
 createUser(Arg, _Path) ->
-	{ok, Json, _} = rfc4627:decode(Arg#arg.clidata),
+	{ok, JSON, _} = rfc4627:decode(Arg#arg.clidata),
 	Record = {obj, [{"user_type", <<"0">>}, %% user_type 0 -> not validated
-	                {"data", Json}]},
+	                {"data", JSON}]},
 	error_logger:info_msg("Record: ~p~n", [Record]),
 	bang_db:doInsert(Record).
 
-updateUser(_Arg, _Path) ->
-	{status, 501}.
+updateUser(Arg, _Path) ->
+	{ok, JSON, _} = rfc4627:decode(Arg#arg.clidata),
+	bang_db:doUpdate(JSON).
 
 deleteUser(_Arg, _Path) ->
 	{status, 501}.

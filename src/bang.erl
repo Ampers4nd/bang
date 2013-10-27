@@ -20,12 +20,12 @@ handle(Arg) ->
 				"form-register-enterprise" ->
 						error_logger:info_msg("Processing user request..."),
 			        	bang_user:handle(Arg, Rest); 
-			    "room" ->
-			            bang_room:handle(Arg, Rest);
-		        "message" ->
-		                bang_message:handle(Arg, Rest);
-		        "socket" ->
-		        		bang_socket:handle(Arg, Rest);
+			    % "room" ->
+			    %         bang_room:handle(Arg, Rest);
+		     %    "message" ->
+		     %            bang_message:handle(Arg, Rest);
+		     %    "socket" ->
+		     %    		bang_socket:handle(Arg, Rest);
 		        "teapot" ->
 		        	{status, 418};
 		        "thc" ->
