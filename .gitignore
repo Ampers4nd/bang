@@ -1,0 +1,5 @@
+ebin/*
+bang_socket.yaws
+*.dump
+include/yaws_api.hrl
+src/bang_private.erl

@@ -3,7 +3,6 @@
 -export([encodedJson/1, contentType/0]).
 
 contentType() -> 
-	error_logger:info_msg("json content type...."),
 	"application/json".
 
 encodedJson(Fields) ->
