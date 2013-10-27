@@ -1,9 +1,9 @@
 -module(bang_json).
 
--export([encodedJson/1, contentType/0]).
+-export([encodedJson/1, contentType/0, contentHeader/0]).
 
-contentType() -> 
-	"application/json".
+contentType() -> "application/json".
+contentHeader() -> {header, ["Content-Type:  ", contentType()]}.
 
 encodedJson(Fields) ->
 	encodedJson(Fields, []).

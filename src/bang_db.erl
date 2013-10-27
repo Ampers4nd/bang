@@ -2,16 +2,29 @@
 -export([doInsert/1, doUpdate/1, getUser/1]).
 
 baseURL() -> "http://localhost:5984/bang/".
-% contentType() -> "application/json".
 
-% getRequest(UID) ->
-% 	error_logger:info_msg("Doing get..."), 
-% 	Header = [],
-% 	HTTPOptions = [],
-% 	Options = [],
-% 	URL = baseURL() ++ UID,
-% 	error_logger:info_msg("URL: ~p~n", [URL]), 
-% 	httpc:request(get, {URL, Header}, HTTPOptions, Options).
+getUser(UID) ->
+	error_logger:info_msg("Retrieving user..."), 
+	Request = bang_http:get(baseURL() ++ UID),
+	case Request of
+		{ok, {{_Version, ResponseCode, _ReasonPhrase}, _Headers, ResponseBody}} ->
+			case ResponseCode of
+				200 ->
+					{ok, JSONResponse, _} = rfc4627:decode(list_to_binary(ResponseBody)),
+					{ok, UserType} = rfc4627:get_field(JSONResponse, "user_type"),
+					{ok, Data} = rfc4627:get_field(JSONResponse, "data"),
+					Record = {obj, [{"val_id", list_to_binary(UID)},
+									{"user_type", UserType},
+									{"data", Data}]},
+					[{html, rfc4627:encode(Record)},
+					 bang_json:contentHeader(),
+					 {status, ResponseCode}];									
+				_ ->
+					{status, ResponseCode}
+			end;
+		_ ->
+			{status, 503}
+	end.
 
 doInsert(Body) ->
 	{ok, UserType} = rfc4627:get_field(Body, "user_type"),
@@ -29,42 +42,28 @@ doInsert(Body) ->
 									{"user_type", UserType}]},
 					Response = rfc4627:encode(Record),
 					[{html, Response},
-					 bang_utilities:json_header(),
+					 bang_json:contentHeader(),
 					 {status, ResponseCode}];
 				_ ->
 					error_logger:error_msg("DB post returned unexpected response code: ~p~n", [Request]),
 					{status, ResponseCode}
 				end;
 		_ ->
-			error_logger:error_msg("DB post failed: Request: ~p~n", [Request]) 
+			error_logger:error_msg("DB post failed: Request: ~p~n", [Request]),
+			{status, 503}
 	end.
-
-% revID ([]) -> "";
-% revID(Headers) ->
-%     [{Key, Value}, Rest] = Headers,
-%     case Key of
-%     	"etag" ->
-%     		Value;
-%     	_ ->
-%     		revID(Rest)
-%    end.
 
 doUpdate(Body) ->
 	{ok, UID} = rfc4627:get_field(Body, "val_id"),
 	{ok, UserType} = rfc4627:get_field(Body, "user_type"),
 	URL = baseURL() ++ binary_to_list(UID),
-	{ok, {{_Version, GETResponseCode, _ReasonPhrase}, _Headers, EncodedJSONOld}} = bang_http:get(URL),
-	error_logger:info_msg("Update GET returned with status code ~p~n", [GETResponseCode]), 
-	error_logger:info_msg("Retrieved JSON ~s~n", [EncodedJSONOld]), 
+	{ok, {{_Version, GETResponseCode, _ReasonPhrase}, _Headers, EncodedJSONOld}} = bang_http:get(URL), 
 	case GETResponseCode of
 		200 ->
 			{ok, DecodedJSONOld, _} = rfc4627:decode(list_to_binary(EncodedJSONOld)),
 			DecodedJSONNew = rfc4627:set_field(DecodedJSONOld, "user_type", UserType),
-			error_logger:info_msg("Update PUT returned with status code ~p~n", DecodedJSONNew),
 			PUTRequest = bang_http:put(URL, rfc4627:encode(DecodedJSONNew)),
-			error_logger:info_msg("PUT Request ~p~n", [PUTRequest]), 
 			{ok, {{_Version2, PUTResponseCode, _ReasonPhrase2}, _Headers2, PUTResponseBody}} = PUTRequest,
-			error_logger:info_msg("Update PUT returned with status code ~p~n", [PUTResponseCode]), 
 			case PUTResponseCode of
 				201 ->
 					{ok, JSONResponse, _} = rfc4627:decode(list_to_binary(PUTResponseBody)),
@@ -74,23 +73,11 @@ doUpdate(Body) ->
 									{"user_type", UserType}]},
 					Response = rfc4627:encode(Record),
 					[{html, Response},
-					 bang_utilities:json_header(),
+					 bang_json:contentHeader(),
 					 {status, PUTResponseCode}];
 				_ ->
 					{status, PUTResponseCode}
 			end;
 		_ ->
 			{status, GETResponseCode}
-	end.
-	% Request = bang_http:post(baseURL() ++ binary_to_list(UID), )
-
-
-getUser(UID) ->
-	error_logger:info_msg("Retrieving user..."), 
-	Request = bang_http:get(baseURL() ++ UID),
-	case Request of
-		{ok, {{_Version, ResponseCode, _ReasonPhrase}, _Headers, _Body}} ->
-			{status, ResponseCode};
-		_ ->
-			{status, 400}
 	end.

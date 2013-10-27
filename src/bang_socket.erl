@@ -14,7 +14,7 @@ handle(Arg, _Path) ->
 			Record = {obj, [{"error", <<"Socket request missing upgrade header">>}]},
 			Response = rfc4627:encode(Record),
 			[{html, Response},
-			bang_utilities:json_header(),
+			bang_json:contentHeader(),
 			{status, 400}]
 	end.
 

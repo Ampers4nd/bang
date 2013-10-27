@@ -20,14 +20,17 @@ handle(Arg, Path) ->
 	end.
 
 getUser(Arg, _Path) ->
-	{ok, UID} = yaws_api:queryvar(Arg, "uid"),
-	bang_db:getUser(UID).
+	case yaws_api:queryvar(Arg, "val_id") of
+		{ok, UID} -> 
+			bang_db:getUser(UID);
+		_ ->
+			{status, 404}
+	end.
 
 createUser(Arg, _Path) ->
 	{ok, JSON, _} = rfc4627:decode(Arg#arg.clidata),
 	Record = {obj, [{"user_type", <<"0">>}, %% user_type 0 -> not validated
 	                {"data", JSON}]},
-	error_logger:info_msg("Record: ~p~n", [Record]),
 	bang_db:doInsert(Record).
 
 updateUser(Arg, _Path) ->
