@@ -53,62 +53,69 @@ doInsert(Body) ->
 			{status, 503}
 	end.
 
-doUpdate(Body) ->
-	doUpdate(rfc4627:get_field(Body, "val_id"), rfc4627:get_field(Body, "user_type")).
-	% {ok, UID} = rfc4627:get_field(Body, "val_id"),
-	% {ok, UserType} = rfc4627:get_field(Body, "user_type"),
-	% URL = baseURL() ++ binary_to_list(UID),
-	% {ok, {{_Version, GETResponseCode, _ReasonPhrase}, _Headers, EncodedJSONOld}} = bang_http:get(URL), 
-	% case GETResponseCode of
-	% 	200 ->
-	% 		{ok, DecodedJSONOld, _} = rfc4627:decode(list_to_binary(EncodedJSONOld)),
-	% 		DecodedJSONNew = rfc4627:set_field(DecodedJSONOld, "user_type", UserType),
-	% 		PUTRequest = bang_http:put(URL, rfc4627:encode(DecodedJSONNew)),
-	% 		{ok, {{_Version2, PUTResponseCode, _ReasonPhrase2}, _Headers2, PUTResponseBody}} = PUTRequest,
-	% 		case PUTResponseCode of
-	% 			201 ->
-	% 				{ok, JSONResponse, _} = rfc4627:decode(list_to_binary(PUTResponseBody)),
-	% 				error_logger:info_msg("JSON Response: ~p~n", [JSONResponse]), 
-	% 				Record = {obj, [{"success", <<"true">>},
-	% 								{"val_id", UID},
-	% 								{"user_type", UserType}]},
-	% 				Response = rfc4627:encode(Record),
-	% 				[{html, Response},
-	% 				 bang_json:contentHeader(),
-	% 				 {status, PUTResponseCode}];
-	% 			_ ->
-	% 				{status, PUTResponseCode}
-	% 		end;
-	% 	_ ->
-	% 		{status, GETResponseCode}
-	% end.
 
+%%update
+doUpdate(Body) ->
+	error_logger:info_msg("Doing Update..."), 
+	doUpdate(rfc4627:get_field(Body, "val_id"), rfc4627:get_field(Body, "user_type")).
 
 doUpdate({ok, UID}, {ok, UserType}) ->
+	error_logger:info_msg("UID: ~p, UserType ~p~n", [UID, UserType]), 
 	URL = baseURL() ++ binary_to_list(UID),
-	{ok, {{_Version, GETResponseCode, _ReasonPhrase}, _Headers, EncodedJSONOld}} = bang_http:get(URL), 
-	case GETResponseCode of
-		200 ->
-			{ok, DecodedJSONOld, _} = rfc4627:decode(list_to_binary(EncodedJSONOld)),
-			DecodedJSONNew = rfc4627:set_field(DecodedJSONOld, "user_type", UserType),
-			PUTRequest = bang_http:put(URL, rfc4627:encode(DecodedJSONNew)),
-			{ok, {{_Version2, PUTResponseCode, _ReasonPhrase2}, _Headers2, PUTResponseBody}} = PUTRequest,
-			case PUTResponseCode of
-				201 ->
-					{ok, JSONResponse, _} = rfc4627:decode(list_to_binary(PUTResponseBody)),
-					error_logger:info_msg("JSON Response: ~p~n", [JSONResponse]), 
-					Record = {obj, [{"success", <<"true">>},
-									{"val_id", UID},
-									{"user_type", UserType}]},
-					Response = rfc4627:encode(Record),
-					[{html, Response},
-					 bang_json:contentHeader(),
-					 {status, PUTResponseCode}];
-				_ ->
-					{status, PUTResponseCode}
-			end;
-		_ ->
-			{status, GETResponseCode}
-	end;
-doUpdate(_, _) ->
-	{status, 400}.
+	processUpdateGET(bang_http:get(URL), [UID, UserType]);
+doUpdate({ok, _UID}, _NotOK) ->
+	Record = {obj, [{"message", <<"Missing 'user_type'">>}]},
+	[{html, rfc4627:encode(Record)},
+	 bang_json:contentHeader(),
+	 {status, 400}];
+doUpdate(_NotOK, {ok, _UserType}) ->
+	Record = {obj, [{"message", <<"Missing 'val_id'">>}]},
+	[{html, rfc4627:encode(Record)},
+	bang_json:contentHeader(),
+	{status, 400}];
+doUpdate(_NotOK, _NotOK) ->
+	Record = {obj, [{"message", <<"Missing fields">>}]},
+	[{html, rfc4627:encode(Record)},
+	bang_json:contentHeader(),
+	{status, 400}].
+
+%%process GET response during update
+processUpdateGET({ok, {{_Version, ResponseCode, _ReasonPhrase}, _Headers, EncodedJSONOld}}, [UID, UserType]) ->
+	error_logger:info_msg("Received GET response ~p~n", ResponseCode), 
+	processUpdateGet(ResponseCode, EncodedJSONOld, [UID, UserType]);
+processUpdateGET(_, _Params) ->
+	{status, 503}.
+
+processUpdateGet(200, EncodedJSONOld, [UID, UserType]) ->
+	error_logger:info_msg("Processing GET 200: ~p~nUID: ~p, UserType: ~p~n", [EncodedJSONOld, UID, UserType]),
+	{ok, DecodedJSONOld, _} = rfc4627:decode(list_to_binary(EncodedJSONOld)),
+	error_logger:info_msg("Old Decoded JSON: ~p~n", [DecodedJSONOld]),
+	DecodedJSONNew = rfc4627:set_field(DecodedJSONOld, "user_type", UserType),
+	error_logger:info_msg("New Decoded JSON: ~p~n", [DecodedJSONNew]),
+	URL = baseURL() ++ binary_to_list(UID),
+	error_logger:info_msg("URL: ~p~n", [URL]),
+	PUTRequest = bang_http:put(URL, rfc4627:encode(DecodedJSONNew)),
+	error_logger:info_msg("PUT Request: ~p~n", [PUTRequest]),
+	processUpdatePUT(PUTRequest, [UID, UserType]);
+processUpdateGet(ResponseCode, _JSON, _Params) ->
+	{status, ResponseCode}.
+
+%%process PUT response during update
+processUpdatePUT({ok, {{_Version, ResponseCode, _ReasonPhrase}, _Headers, ResponseBody}}, [UID, UserType]) ->
+	error_logger:info_msg("Processing update PUT...~n"),
+	processUpdatePUT(ResponseCode, ResponseBody, [UID, UserType]);
+processUpdatePUT(_, _Params) ->
+	{status, 503}.
+
+processUpdatePUT(201, ResponseBody, [UID, UserType]) ->
+	{ok, JSONResponse, _} = rfc4627:decode(list_to_binary(ResponseBody)),
+	error_logger:info_msg("JSON Response: ~p~n", [JSONResponse]), 
+	Record = {obj, [{"success", <<"true">>},
+					{"val_id", UID},
+					{"user_type", UserType}]},
+	Response = rfc4627:encode(Record),
+	[{html, Response},
+	 bang_json:contentHeader(),
+	 {status, 201}];
+processUpdatePUT(ResponseCode, _ResponseBody, _Params) ->
+	{status, ResponseCode}.

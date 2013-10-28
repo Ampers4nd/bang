@@ -15,7 +15,10 @@ options() -> [].
 httpOptions() -> [].
 
 get(URL) ->
-	httpc:request(get, {URL, []}, httpOptions(), options()).
+	httpc:request(get, 
+					{URL, []}, 
+					httpOptions(),
+					options()).
 
 get(User, PW, URL) ->
 	request(get, User, PW, URL, []).
@@ -30,7 +33,7 @@ post(User, PW, URL, Body) ->
 	request(post, User, PW, URL, Body).
 
 put(URL, Body) ->
-		httpc:request(put, 
+	httpc:request(put, 
 					{URL, headers(json), bang_json:contentType(), Body},
 		 			httpOptions(), 
 		 			options()). 
