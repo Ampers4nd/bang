@@ -1,5 +1,7 @@
 ebin/*
 bang_socket.yaws
 *.dump
+*.swp
+*.swo
 include/yaws_api.hrl
 src/bang_private.erl

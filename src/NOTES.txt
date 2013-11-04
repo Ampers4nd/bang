@@ -1,0 +1,14 @@
+NOTES:
+
+attach session length (ms) to token, delimited with '|'
+  
+Session request: pass token, receive user session based on token validity
+
+session, user models should look the same for enterprise and user
+
+1) enterprise registration
+
+2) user login / session
+
+
+
