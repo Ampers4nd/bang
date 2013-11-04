@@ -10,7 +10,8 @@ handle(Arg, Path) ->
 		'POST' -> 
 			createUser(Arg, Path);
 		'PUT' ->
-			updateUser(Arg, Path);
+			{status, 405},
+			% updateUser(Arg, Path); #dropped support for update via PUT, instead do GET on $APP_ROOT/validation/$VAL_TOKEN
 		'DELETE' ->
 			deleteUser(Arg, Path);
 		'HEAD' ->
@@ -50,9 +51,9 @@ processUserJSON(_UName, _PW, _Data) ->
 		bang_json:contentHeader(),
 		 {status, 400}].
 
-updateUser(Arg, _Path) ->
-	{ok, JSON, _} = rfc4627:decode(Arg#arg.clidata),
-	bang_db:doUpdate(JSON).
+% updateUser(Arg, _Path) ->
+% 	{ok, JSON, _} = rfc4627:decode(Arg#arg.clidata),
+% 	bang_db:doUpdate(JSON).
 
 deleteUser(_Arg, _Path) ->
 	{status, 501}.

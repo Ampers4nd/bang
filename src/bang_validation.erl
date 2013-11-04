@@ -15,10 +15,5 @@ handle(Arg, Path) ->
 doValidate(UID) ->
 	UpdateRecord = {obj, [{"token", list_to_binary(UID)},
 	                       {"user_type", <<"1">>}]},
-	% Record = {obj, [{"success", <<"true">>},
-	% 				{"auth_code", bang_crypto:randomBin(31, 36)}]},
 	error_logger:info_msg("Attempting validation of UID ~p~n", [UID]),
 	bang_db:doUpdate(UpdateRecord). 
-	% [{html, rfc4627:encode(Record)},
-	%  bang_json:contentHeader(),
-	%  {status, 200}].
