@@ -10,7 +10,7 @@ handle(Arg, Path) ->
 		'POST' -> 
 			createUser(Arg, Path);
 		'PUT' ->
-			{status, 405},
+			{status, 405};
 			% updateUser(Arg, Path); #dropped support for update via PUT, instead do GET on $APP_ROOT/validation/$VAL_TOKEN
 		'DELETE' ->
 			deleteUser(Arg, Path);

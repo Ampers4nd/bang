@@ -1,7 +1,11 @@
 -module(bang_db).
 -export([doInsert/1, doUpdate/1, getUser/1]).
 
-baseURL() -> "http://localhost:5984/bang/".
+baseURL() -> "http://localhost:5984/bang_enterprise_users/".
+
+%coucdb view URLs
+% byAppURL() -> "http://localhost:5984/bang_users/_design/enterprise_users/_view/by_application_id".
+% byClientURL() -> "http://localhost:5984/bang_users/_design/enterprise_users/_view/by_client_id".
 
 
 %%retrieve user
@@ -12,33 +16,25 @@ getUser(UID) ->
 processRetrieve({ok, {{_Version, ResponseCode, _ReasonPhrase}, _Headers, ResponseBody}}, UID) ->
 	processRetrieve(UID, ResponseCode, ResponseBody);
 processRetrieve(_, _UID) ->
-	{status, 503}.
+	bang_utilities:simpleResponse("Failed to retrieve record", 503).
 
 processRetrieve(200, UID, ResponseBody) ->
 	{ok, JSONResponse, _} = rfc4627:decode(list_to_binary(ResponseBody)),
 	{ok, UserType} = rfc4627:get_field(JSONResponse, "user_type"),
 	case UserType of
 		<<"0">> ->
-			Record = {obj, [{"message", <<"USER_NOT_VALIDATED">>}]},
-			[{html, rfc4627:encode(Record)},
-			 bang_json:contentHeader(),
-		 	 {status, 401}];
+			bang_utilities:simpleResponse("USER_NOT_VALIDATED", 401);
 		<<"-1">> ->
-			Record = {obj, [{"message", <<"USER_DELETED">>}]},
-			[{html, rfc4627:encode(Record)},
-			 bang_json:contentHeader(),
-		 	 {status, 401}];
+			bang_utilities:simpleResponse("USER_DELETED", 401); 
 		_ ->
 			{ok, Data} = rfc4627:get_field(JSONResponse, "data"),
 			Record = {obj, [{"token", list_to_binary(UID)},
 						{"user_type", UserType},
 						{"data", Data}]},
-			[{html, rfc4627:encode(Record)},
-			 bang_json:contentHeader(),
-		 	 {status, 200}]
+			bang_utilities:jsonEncodedResponse(Record, 200)
 	end;
 processRetrieve(ResponseCode, _UID, _ResponseBody) ->
-	{status, ResponseCode}.
+	bang_utilities:simpleResponse("Failed to retrieve record", ResponseCode).
 
 %%add new user
 doInsert(Body) ->
@@ -56,50 +52,38 @@ doInsert(Body) ->
 					Record = {obj, [{"success", <<"true">>},
 									{"token", UID},
 									{"user_type", UserType}]},
-					Response = rfc4627:encode(Record),
-					[{html, Response},
-					 bang_json:contentHeader(),
-					 {status, ResponseCode}];
+					bang_utilities:jsonEncodedResponse(Record, ResponseCode);
 				_ ->
 					error_logger:error_msg("DB post returned unexpected response code: ~p~n", [Request]),
-					{status, ResponseCode}
+					bang_utilities:simpleResponse("Insert failed", ResponseCode)
 				end;
 		_ ->
 			error_logger:error_msg("DB post failed: Request: ~p~n", [Request]),
-			{status, 503}
+			bang_utilities:simpleResponse("Insert failed", 503)
 	end.
 
 
 %%update user
 doUpdate(Body) ->
-	error_logger:info_msg("!!!!!!!!!!!!!!Doing update: ~p~n!!!!!!!!!!!!!!!!!!!!", [Body]),
+	error_logger:info_msg("!!!!!!!!!!!!!!Doing update: ~p~n!!!!!!!!!!!!!!!!!!!!~n", [Body]),
 	doUpdate(rfc4627:get_field(Body, "token"), rfc4627:get_field(Body, "user_type")).
 
 doUpdate({ok, UID}, {ok, UserType}) ->
 	URL = baseURL() ++ binary_to_list(UID),
+	error_logger:info_msg("Retrieving record from URL ~p~n", [URL]), 
 	processUpdateGET(bang_http:get(URL), [UID, UserType]);
 doUpdate({ok, _UID}, _NotOK) ->
-	Record = {obj, [{"message", <<"Missing 'user_type'">>}]},
-	[{html, rfc4627:encode(Record)},
-	 bang_json:contentHeader(),
-	 {status, 400}];
+	bang_utilities:simpleResponse("Missing 'user_type'", 400);
 doUpdate(_NotOK, {ok, _UserType}) ->
-	Record = {obj, [{"message", <<"Missing 'token'">>}]},
-	[{html, rfc4627:encode(Record)},
-	bang_json:contentHeader(),
-	{status, 400}];
+	bang_utilities:simpleResponse("Missing 'token'", 400);
 doUpdate(_NotOK, _NotOK) ->
-	Record = {obj, [{"message", <<"Missing fields">>}]},
-	[{html, rfc4627:encode(Record)},
-	bang_json:contentHeader(),
-	{status, 400}].
-
+	bang_utilities:simpleResponse("Missing fields", 400). 
 
 %%process GET response during update
 processUpdateGET({ok, {{_Version, ResponseCode, _ReasonPhrase}, _Headers, EncodedJSONOld}}, [UID, UserType]) ->
 	processUpdateGet(ResponseCode, EncodedJSONOld, [UID, UserType]);
 processUpdateGET(_, _Params) ->
-	{status, 503}.
+	bang_utilities:simpleResponse("Could not retrieve record", 503).
 
 processUpdateGet(200, EncodedJSONOld, [UID, UserType]) ->
 	{ok, DecodedJSONOld, _} = rfc4627:decode(list_to_binary(EncodedJSONOld)),
@@ -107,35 +91,28 @@ processUpdateGet(200, EncodedJSONOld, [UID, UserType]) ->
 	case CurrentUserType of 
 		<<"0">> ->
 			JSONWithUserType = rfc4627:set_field(DecodedJSONOld, "user_type", UserType),
-			JSONWithAppID = rfc4627:set_field(JSONWithUserType, "application_id", bang_crypto:randomBin(16, 36)),
-			JSONWithClientID = rfc4627:set_field(JSONWithAppID, "client_id", bang_crypto:randomBin(16, 36)),
+			JSONWithAppID = rfc4627:set_field(JSONWithUserType, "application_id", list_to_binary("AP_" ++ bang_crypto:randomString(13, 36))),
+			JSONWithClientID = rfc4627:set_field(JSONWithAppID, "client_id", list_to_binary("CL_" ++ bang_crypto:randomBin(13, 36))),
 			URL = baseURL() ++ binary_to_list(UID),
 			PUTRequest = bang_http:put(URL, rfc4627:encode(JSONWithClientID)),
 			processUpdatePUT(PUTRequest, [UID, UserType]);
 		_ ->
-			Record = {obj, [{"message", <<"You don't belong here.">>}]},
-			[{html, rfc4627:encode(Record)},
-			 bang_json:contentHeader(),
-			 {status, 401}]
+			bang_utilities:simpleResponse("You don't belong here.", 401)
 	end;
 processUpdateGet(ResponseCode, _JSON, _Params) ->
-	{status, ResponseCode}.
+	bang_utilities:simpleResponse("Could not retrieve record", ResponseCode).
 
 %%process PUT response during update
 processUpdatePUT({ok, {{_Version, ResponseCode, _ReasonPhrase}, _Headers, ResponseBody}}, [UID, UserType]) ->
 	processUpdatePUT(ResponseCode, ResponseBody, [UID, UserType]);
 processUpdatePUT(_, _Params) ->
-	{status, 503}.
+	bang_utilities:simpleResponse("Update Failed", 503).
 
-processUpdatePUT(201, ResponseBody, [UID, UserType]) ->
+processUpdatePUT(201, ResponseBody, [_UID, UserType]) ->
 	{ok, JSONResponse, _} = rfc4627:decode(list_to_binary(ResponseBody)),
 	error_logger:info_msg("JSON Response: ~p~n", [JSONResponse]), 
 	Record = {obj, [{"success", <<"true">>},
-					{"token", UID},
 					{"user_type", UserType}]},
-	Response = rfc4627:encode(Record),
-	[{html, Response},
-	 bang_json:contentHeader(),
-	 {status, 201}];
+	bang_utilities:jsonEncodedResponse(Record, 201); 
 processUpdatePUT(ResponseCode, _ResponseBody, _Params) ->
-	{status, ResponseCode}.
+	bang_utilities:simpleResponse("Update Failed", ResponseCode). 

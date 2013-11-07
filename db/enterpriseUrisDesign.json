@@ -1,0 +1,11 @@
+{
+	"id_":"_design/enterprise_uris",
+	"views": {
+		"by_application_id": {
+			"map":"function(doc){if (doc.application_id) {emit(doc.application_id, {id: doc._id, rev: doc._rev, client_id: doc.client_id, user_type: doc.user_type, uname: doc.uname, pw: doc.pw, data: doc.data});}}"
+		},
+		"by_client_id": {
+			"map":"function(doc){if (doc.client_id) {emit(doc.client_id, {id: doc._id, rev: doc._rev, client_id: doc.client_id, user_type: doc.user_type, uname: doc.uname, pw: doc.pw, data: doc.data});}}"
+		}
+	}
+}

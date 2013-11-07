@@ -6,27 +6,19 @@
 
 handle(Arg, Path) ->
 	case bang_utilities:method(Arg) of 
-		'GET' ->
-			error_logger:info_msg("Received GET..."), 
-			Record = {obj, {"hello", <<"hello">>}},
-			Response = rfc4627:encode(Record),
-			[{html, Response},
-			 bang_json:contentHeader(),
-			 {status, 200}];
 		'POST' -> 
-			error_logger:info_msg("Received GET..."), 
+			error_logger:info_msg("Received POST..."), 
 			doAuth(Arg, Path);
-		'PUT' ->
-			{status, 501};
-		'DELETE' ->
-			{status, 501};
-		'HEAD' ->
-			{status, 204};
 		_ ->
 			{status, 405}
 	end.
 
 
+
+%extract application_id, client_id, redirect_uri, credentials
+%return auth_code wihth 200 if ok
+%400 for missing args
+%401 otherwise (incorrect or expired credentials)
 doAuth(Arg, _Path) ->
 	error_logger:info_msg("Received login request"),
 	{ok, JSON, _} = rfc4627:decode(Arg#arg.clidata),

@@ -25,7 +25,7 @@ elif [ ${METHOD} = "PUT" ]; then
     fi
 elif [ ${METHOD} = "GET" ]; then
     echo "X1 METHOD = ${METHOD}";
-    VAL_ID=$3
+    VAL_ID=$5
     if [ ${VAL_ID} = "" ]; then 
         echo "Missing val id";
     else
