@@ -49,7 +49,7 @@ processRequestPath(Path, Arg) ->
 			        bang_user:handle(Arg, Rest); 
 			    "form-sign-in" ->
 			    	error_logger:info_msg("Processing login request..."),
-			    	bang_login:handle(Arg, Rest);
+			    	bang_session:handle(Arg, Rest);
 			    "validation" ->
 			    	error_logger:info_msg("Processing validation request..."),
 			    	bang_validation:handle(Arg, Rest);

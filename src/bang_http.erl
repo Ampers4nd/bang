@@ -15,6 +15,7 @@ options() -> [].
 httpOptions() -> [].
 
 get(URL) ->
+	error_logger:info_msg("Doing GET: ~p~n", [URL]), 
 	httpc:request(get, 
 					{URL, []}, 
 					httpOptions(),
