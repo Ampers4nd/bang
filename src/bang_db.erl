@@ -109,7 +109,7 @@ processUpdatePUT(_, _Params) ->
 	bang_utilities:simpleResponse("Update Failed", 503).
 
 processUpdatePUT(201, ResponseBody, [_UID, UserType]) ->
-	{ok, JSONResponse, _} = rfc4627:decode(list_to_binary(ResponseBody))
+	{ok, JSONResponse, _} = rfc4627:decode(list_to_binary(ResponseBody)),
 	error_logger:info_msg("JSON Response: ~p~n", [JSONResponse]), 
 	Record = {obj, [{"success", <<"true">>},
 					{"user_type", UserType}]},

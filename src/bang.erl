@@ -45,14 +45,17 @@ processRequestPath(Path, Arg) ->
 			[Root | Rest] = Path, 
 			case string:to_lower(Root) of 
 				"form-register-enterprise" ->
-					error_logger:info_msg("Processing user request..."),
+					error_logger:info_msg("Processing user request...~n"),
 			        bang_user:handle(Arg, Rest); 
-			    "form-sign-in" ->
-			    	error_logger:info_msg("Processing login request..."),
-			    	bang_session:handle(Arg, Rest);
 			    "validation" ->
-			    	error_logger:info_msg("Processing validation request..."),
-			    	bang_validation:handle(Arg, Rest);
+			    	error_logger:info_msg("Processing validation request...~n"),
+			    	bang_validation:handle(Arg, Rest);			        
+			    "form-sign-in" ->
+			    	error_logger:info_msg("Processing login request...~n"),
+			    	bang_session_auth:handle(Arg, Rest);
+			    "session-token" ->
+					error_logger:info_msg("Processing session token request...~n"),			    	
+			    	bang_session_token:handle(Arg, Rest);
 		        "teapot" ->
 		        	{status, 418};
 		        "thc" ->

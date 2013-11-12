@@ -1,8 +1,7 @@
--module(bang_session).
+-module(bang_session_auth).
 
 -include("../include/yaws_api.hrl").
 -export([handle/2]).
-
 
 handle(Arg, Path) ->
 	case bang_utilities:method(Arg) of 
