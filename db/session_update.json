@@ -1,0 +1,5 @@
+{
+  "updates": {
+    "created" : "function(doc, req) {\n      if (!doc.created) {\n        if (!doc._id) {\n          doc.id = req.uuid\n        }\n        var created = Math.round(Date.now()/1000);\n        doc.created = created;\n        if (doc.auth_code){\n          doc.expires = created + (doc.session_length || 60);\n        }\n        else if (doc.token)\n        {\n	  doc.expires = created + (doc.session_length || 3600); \n	}\n      }\n      return [doc, \"OK\"];\n    }"
+  }
+}
