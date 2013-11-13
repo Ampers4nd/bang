@@ -27,6 +27,7 @@ processCredentialResponse({ok, {{_Version, 200, _ReasonPhrase}, _Headers, Encode
                             {"client_id", list_to_binary(ClientID)},
                             {"auth_code", AuthCode},
                             {"created_at", integer_to_binary(CreatedAt)},
+                            {"is_valid", <<"true">>},
                             {"expires", integer_to_binary(Expires)}]},
             error_logger:info_msg("Posting auth code to URL: ~p~nBody: ~p~n", [bang_private:couchSessionURL(), Record]), 
             Request = bang_http:post(bang_private:couchSessionURL(), rfc4627:encode(Record)),
@@ -81,6 +82,7 @@ processTokenGET({ok, {{_Version, 200, _ReasonPhrase}, _Headers, EncodedJSON}}, A
                                     {"client_id", list_to_binary(ClientID)},
                                     {"session_token", Token},
                                     {"created_at", integer_to_binary(Now)},
+                                    {"is_valid", <<"true">>},
                                     {"expires", integer_to_binary(TokenExpire)}]},
                     TokenPostRequest = bang_http:post(bang_private:couchSessionURL(), rfc4627:encode(Record)),
                     processTokenPOST(TokenPostRequest, AppID, ClientID, Token); 

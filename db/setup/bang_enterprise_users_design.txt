@@ -1,0 +1,1 @@
+{"_id":"_design/users","language":"javascript","views":{"by_credentials":{"map":"function(doc) {\n  if (doc.pw && doc.uname && doc.uname && doc.pw && doc.user_type > 0) {\n  \t\temit([doc.application_id, doc.client_id, doc.uname, doc.pw], 1);\n  }\n}"}}}
