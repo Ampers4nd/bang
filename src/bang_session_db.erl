@@ -76,6 +76,8 @@ processTokenGET({ok, {{_Version, 200, _ReasonPhrase}, _Headers, EncodedJSON}}, A
             Now = MegaSecs * trunc(math:pow(10, 6)) + Secs,
             case ((Now - Expires) =< 0) of
                 true ->
+                    {ok, DocID} = rfc4627:get_field(TheRow, "id"),
+                    spawn(bang_invalidate, invalidateAuth, [binary_to_list(DocID)]),
                     Token = bang_crypto:randomBin(12, 36),
                     TokenExpire = Now + bang_config:sessionInterval(),
                     Record = {obj, [{"application_id", list_to_binary(AppID)},
