@@ -13,9 +13,6 @@ invalidateAuth(DocID, ReqCount) ->
 	error_logger:info_msg("Invalidating auth code at URL: ~p~n", [URL]), 
 	processRequest(bang_http:put(URL, []), DocID, ReqCount).
 
-processRequest({ok, {{_Version, 200, _ReasonPhrase}, _Headers, _Body}}, _DocID, _ReqCount) ->
-	error_logger:info_msg("Auth code invalidate request code 200, Doc ID: ~p~n", [_DocID]), 
-	ok;
 processRequest({ok, {{_Version, 201, _ReasonPhrase}, _Headers, _Body}}, _DocID, _ReqCount) ->
 	error_logger:info_msg("Auth code invalidate request code 201, Doc ID: ~p~n", [_DocID]), 
 	ok;
