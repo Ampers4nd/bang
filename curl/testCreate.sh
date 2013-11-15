@@ -11,17 +11,7 @@ RESOURCE=form-register-enterprise
 
 if [ ${METHOD} = "POST" ]; then
     echo "Doing POST..."
-    curl -v -k -X $METHOD -H "Content-Type: application/json" -d '{"username":"abcdef","password":"hijklm", "data":{"more":"stuff"}}'  https://${IP}:${PORT}/api/1.0/${RESOURCE};
-#elif [ ${METHOD} = "PUT" ]; then
-#    echo "X0 METHOD = ${METHOD}";
-#    VAL_ID=$3
-#    if [ ${VAL_ID} = "" ]; then 
-#        echo "Missing val id"
-#    else
-#        echo "Doing PUT!!!!!!!!!!!!!!!!!!!!"
-#        echo "curl -v -k -X ${METHOD} -H "Content-Type: application/json" -d '{"token":"${VAL_ID}","user_type":"1"}' https://${IP}:${PORT}/api/1.0/${RESOURCE}"
-#        curl -v -k -X ${METHOD} -H "Content-Type: application/json" -d "{\"token\":\"${VAL_ID}\",\"user_type\":\"1\"}" https://${IP}:${PORT}/api/1.0/${RESOURCE};
-#    fi
+    curl -v -k -X $METHOD -H "Content-Type: application/json" -d '{"username":"abc","password":"def", "data":{"more":"stuff"}}'  https://${IP}:${PORT}/api/1.0/${RESOURCE};
 elif [ ${METHOD} = "GET" ]; then
     echo "X1 METHOD = ${METHOD}";
     VAL_ID=$3
