@@ -3,44 +3,57 @@
 -export([doAuth/5, doToken/3]).
 
 %%confirm credentials, create and return auth_code
-doAuth(AppID, ClientID, _RedirectURI, EncryptedUName, EncryptedPW) ->
+doAuth(AppID, ClientID, RedirectURI, EncryptedUName, EncryptedPW) ->
     Parameters = yaws_api:url_encode("[\"" ++ AppID ++ "\",\"" 
                                         ++ ClientID ++ "\",\"" 
                                         ++ EncryptedUName ++ "\",\"" 
                                         ++ EncryptedPW ++"\"]"), 
     QueryURL = bang_private:couchEnterpriseByCredentialsURL() ++ "?key=" ++ Parameters,
-    processCredentialResponse(bang_http:get(QueryURL), AppID, ClientID).
+    processCredentialResponse(bang_http:get(QueryURL), AppID, ClientID, RedirectURI).
 
-processCredentialResponse({ok, {{_Version, 200, _ReasonPhrase}, _Headers, EncodedJSON}}, AppID, ClientID) -> 
+processCredentialResponse({ok, {{_Version, 200, _ReasonPhrase}, _Headers, EncodedJSON}}, AppID, ClientID, RedirectURI) -> 
     {ok, DecodedJSON, _} = rfc4627:decode(EncodedJSON),
     {ok, Rows} = rfc4627:get_field(DecodedJSON, "rows"),
     case Rows of
-        [{obj, _Entries}] ->
-            AuthCode = bang_crypto:randomBin(12, 36),
-            {MegaSecs, Secs, _MicroSecs} = os:timestamp(),
-            error_logger:info_msg("TimeStamp: ~p~n", [{MegaSecs, Secs}]), 
-            CreatedAt = MegaSecs * trunc(math:pow(10, 6)) + Secs,
-            error_logger:info_msg("Created: ~p~n", [CreatedAt]), 
-            Expires = CreatedAt + bang_config:authInterval(),
-            error_logger:info_msg("Expires: ~p~n", [Expires]),             
-            Record = {obj, [{"application_id", list_to_binary(AppID)},
-                            {"client_id", list_to_binary(ClientID)},
-                            {"auth_code", AuthCode},
-                            {"created_at", integer_to_binary(CreatedAt)},
-                            {"is_valid", <<"true">>},
-                            {"expires", integer_to_binary(Expires)}]},
-            error_logger:info_msg("Posting auth code to URL: ~p~nBody: ~p~n", [bang_private:couchSessionURL(), Record]), 
-            Request = bang_http:post(bang_private:couchSessionURL(), rfc4627:encode(Record)),
-            error_logger:info_msg("Auth code request: ~p~n", [Request]),
-            processAuthCodePost(Request, AuthCode);
+        [{obj, SingleRow}] ->
+            error_logger:info_msg("Row entries: ~p~n", [SingleRow]),
+            [{"id", _ID}, {"key", _Key}, {"value", RedirectURIS}] = SingleRow,
+            error_logger:info_msg("Redirect uris: ~p~n", [RedirectURIS]), 
+            processRow(RedirectURIS, AppID, ClientID, RedirectURI);
         [] ->
-            bang_utilities:simpleResponse("Invalid credentials", 401)
+            bang_utilities:simpleResponse("Invalid credentials", 401);
+        [_MultipleRows] -> %oops, there is more than one row returned for same credentials, that shouldn't be
+            bang_utilities:simpleResponse("Credentials bound to multiple docs :-(", 500)
     end;
-processCredentialResponse({ok, {{_Version, _ResponseCode, _ReasonPhrase}, _Headers, _EncodedJSON}}, _AppID, _ClientID) ->
+processCredentialResponse({ok, {{_Version, _ResponseCode, _ReasonPhrase}, _Headers, _EncodedJSON}}, _AppID, _ClientID, _RedirectURI) ->
     bang_utilities:simpleResponse("Invalid credentials", 401);
-processCredentialResponse(_, _AppID, _ClientID) ->
+processCredentialResponse(_, _AppID, _ClientID, _RedirectURI) ->
     bang_utilities:simpleResponse("Unable to process request", 503).
 
+processRow(RedirectURIS, AppID, ClientID, RedirectURI) ->
+    error_logger:info_msg("Redirect uris: ~p~n", [RedirectURIS]), 
+    case bang_utilities:listContainsValue(RedirectURIS, list_to_binary(RedirectURI)) of
+        true ->
+            doAuthCodePost(AppID, ClientID);
+        false ->
+            bang_utilities:simpleResponse("Unauthorized redirect: " ++ RedirectURI, 401)
+    end.
+
+doAuthCodePost(AppID, ClientID) ->
+    AuthCode = bang_crypto:randomBin(12, 36),
+    {MegaSecs, Secs, _MicroSecs} = os:timestamp(),
+    CreatedAt = MegaSecs * trunc(math:pow(10, 6)) + Secs,
+    Expires = CreatedAt + bang_config:authInterval(),
+    Record = {obj, [{"application_id", list_to_binary(AppID)},
+                    {"client_id", list_to_binary(ClientID)},
+                    {"auth_code", AuthCode},
+                    {"created_at", integer_to_binary(CreatedAt)},
+                    {"is_valid", <<"true">>},
+                    {"expires", integer_to_binary(Expires)}]},
+    error_logger:info_msg("Posting auth code to URL: ~p~nBody: ~p~n", [bang_private:couchSessionURL(), Record]), 
+    Request = bang_http:post(bang_private:couchSessionURL(), rfc4627:encode(Record)),
+    error_logger:info_msg("Auth code request: ~p~n", [Request]),
+    processAuthCodePost(Request, AuthCode).
 
 processAuthCodePost({ok, {{_Version, 201, _ReasonPhrase}, _Headers, _ResponseBody}}, AuthCode) ->
     Record = {obj, [{"success", <<"true">>},
