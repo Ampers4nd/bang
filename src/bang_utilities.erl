@@ -1,6 +1,6 @@
 -module(bang_utilities).
 
--export([path/1, method/1, headers/1, simpleResponse/2, jsonEncodedResponse/2, listContainsValue/2]).
+-export([path/1, method/1, headers/1, simpleResponse/2, jsonEncodedResponse/2, listContainsValue/2, randomAppID/0, randomClientID/0]).
 -include("../include/yaws_api.hrl").
 
 method(Arg) ->
@@ -14,6 +14,7 @@ path(undefined) ->
 path(Path) ->
     string:tokens(Path, "/").
 
+%%returns response with simple json object, {"message" : Message}
 simpleResponse(Message, ResponseCode) ->
 	Record = {obj, [{"message", list_to_binary(Message)}]},
 	[{html, rfc4627:encode(Record)},
@@ -36,4 +37,8 @@ listContainsValue(List, Value) ->
 			listContainsValue(T, Value)
 	end.
 
+randomAppID() ->
+	"AP_" ++ bang_crypto:randomString(13, 36).
 
+randomClientID() ->
+	"CL_" ++ bang_crypto:randomString(13, 36).

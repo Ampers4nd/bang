@@ -10,5 +10,7 @@ session, user models should look the same for enterprise and user
 
 2) user login / session
 
+%%user_type -> acct_stage
+
 
 

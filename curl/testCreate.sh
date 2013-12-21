@@ -8,10 +8,12 @@ METHOD=$1
 IP=$2
 PORT=4443
 RESOURCE=form-register-enterprise
+UNAME=default@gmail.com
+PW=Qwert1234!
 
 if [ ${METHOD} = "POST" ]; then
     echo "Doing POST..."
-    curl -v -k -X $METHOD -H "Content-Type: application/json" -d '{"username":"abc","password":"def", "data":{"more":"stuff"}}'  https://${IP}:${PORT}/api/1.0/${RESOURCE};
+    curl -v -k -X $METHOD -H "Content-Type: application/json" -d "{\"username\":\"${UNAME}\",\"password\":\"${PW}\", \"data\":{\"more\":\"stuff\"}}"  https://${IP}:${PORT}/api/1.0/${RESOURCE};
 elif [ ${METHOD} = "GET" ]; then
     echo "X1 METHOD = ${METHOD}";
     VAL_ID=$3

@@ -2,7 +2,7 @@
 
 -export([doAuth/5, doToken/3]).
 
-%%confirm credentials, create and return auth_code
+%%confirm credentials, create and return auth_code if credentials are valid
 doAuth(AppID, ClientID, RedirectURI, EncryptedUName, EncryptedPW) ->
     Parameters = yaws_api:url_encode("[\"" ++ AppID ++ "\",\"" 
                                         ++ ClientID ++ "\",\"" 
@@ -58,7 +58,7 @@ doAuthCodePost(AppID, ClientID) ->
 processAuthCodePost({ok, {{_Version, 201, _ReasonPhrase}, _Headers, _ResponseBody}}, AuthCode) ->
     Record = {obj, [{"success", <<"true">>},
                 {"auth_code", AuthCode}]},
-    bang_utilities:jsonEncodedResponse(Record, 200);
+    bang_utilities:jsonEncodedResponse(Record, 201);
 processAuthCodePost({ok, {{_Version, ResponseCode, ReasonPhrase}, _Headers, ResponseBody}}, _AuthCode) ->
     error_logger:info_msg("Auth code post failed with response code ~p~n, reason: ~p~n, body: ~p~n", [ResponseCode, ReasonPhrase, ResponseBody]),
     bang_utilities:simpleResponse("Login failed", 503);
@@ -66,7 +66,7 @@ processAuthCodePost(_, _AuthCode) ->
     errorLogger:info_msg("Auth code post failed~n"),
     bang_utilities:simpleResponse("Login failed", 500). 
 
-%%exchange auth_code for token
+%%exchange auth_code for token after confirming credentials
 doToken(AppID, ClientID, AuthCode) ->
     Parameters = yaws_api:url_encode("[\"" ++ AppID ++ "\",\"" 
                                         ++ ClientID ++ "\",\"" 
@@ -82,15 +82,19 @@ processTokenGET({ok, {{_Version, 200, _ReasonPhrase}, _Headers, EncodedJSON}}, A
         [] ->
             bang_utilities:simpleResponse("Invalid credentials", 401);
         [TheRow] ->
+            error_logger:info_msg("The Row: ~p~n", [TheRow]), 
             {ok, RowValue} = rfc4627:get_field(TheRow, "value"),
             {ok, ExpiresBin} = rfc4627:get_field(RowValue, "expires"),
             Expires = binary_to_integer(ExpiresBin), 
             {MegaSecs, Secs, _MicroSecs} = os:timestamp(),
             Now = MegaSecs * trunc(math:pow(10, 6)) + Secs,
-            case ((Now - Expires) =< 0) of
+            {ok, IsValid} = rfc4627:get_field(RowValue, "is_valid"),
+            error_logger:info_msg("is_valid: ~p~n", [IsValid]),
+            case (IsValid and ((Now - Expires) =< 0)) of
                 true ->
+                    error_logger:info_msg("True!!!"), 
                     {ok, DocID} = rfc4627:get_field(TheRow, "id"),
-                    spawn(bang_invalidate, invalidateAuth, [binary_to_list(DocID)]),
+                    spawn(bang_invalidate, invalidateAuth, [binary_to_list(DocID)]), %% auth_code is good for only one use
                     Token = bang_crypto:randomBin(12, 36),
                     TokenExpire = Now + bang_config:sessionInterval(),
                     Record = {obj, [{"application_id", list_to_binary(AppID)},
@@ -102,17 +106,20 @@ processTokenGET({ok, {{_Version, 200, _ReasonPhrase}, _Headers, EncodedJSON}}, A
                     TokenPostRequest = bang_http:post(bang_private:couchSessionURL(), rfc4627:encode(Record)),
                     processTokenPOST(TokenPostRequest, AppID, ClientID, Token); 
                 false ->
-                    bang_utilities:simpleResponse("Auth Code Expired", 401)
+                    error_logger:info_msg("False!!!"),
+                    bang_utilities:simpleResponse("Invalid Auth Code", 401)
             end;
         _ ->
-                bang_utilities:simpleResponse("Invalid credentials", 401)
+                bang_utilities:simpleResponse("Record Not Found", 404)
     end.
+
+
 
 processTokenPOST({ok, {{_Version, 201, _ReasonPhrase}, _Headers, _EncodedJSON}}, AppID, ClientID, Token) ->
     Record = {obj, [{"application_id", list_to_binary(AppID)},
                                     {"client_id", list_to_binary(ClientID)},
                                     {"session_token", Token}]},
-    bang_utilities:jsonEncodedResponse(Record, 200); 
+    bang_utilities:jsonEncodedResponse(Record, 201); 
 processTokenPOST({ok, {{_Version, _ResponseCode, _ReasonPhrase}, _Headers, _EncodedJSON}}, _AppID, _ClientID, _Token) ->
     error_logger:info_msg("Response Code: ~p~nReason: ~p~n", [_ResponseCode, _ReasonPhrase]), 
     bang_utilities:simpleResponse("Invalid credentials", 401);

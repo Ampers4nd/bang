@@ -19,6 +19,7 @@ handle(Arg, Path) ->
 doAuth(Arg, _Path) ->
 	error_logger:info_msg("Received login request"),
 	DecodedBody = rfc4627:decode(Arg#arg.clidata),
+	% error_logger:info_msg("Decoded JSON: ~p~n", [DecodedBody]), 
 	case DecodedBody of
 		{ok, JSON, _} ->
 			error_logger:info_msg("login JSON: ~p~n", [JSON]),

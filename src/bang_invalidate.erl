@@ -27,4 +27,3 @@ processRequest(_Request, _DocID, _ReqCount) ->
 	error_logger:info_msg("Auth code invalidate failed with error: ~p~n", [_Request]),
 	invalidate_error.
  
-
