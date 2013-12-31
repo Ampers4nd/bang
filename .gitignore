@@ -5,3 +5,4 @@ bang_socket.yaws
 *.swo
 include/yaws_api.hrl
 src/bang_private.erl
+README.html
