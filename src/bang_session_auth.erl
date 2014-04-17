@@ -47,9 +47,3 @@ unpackCredentialsAndDoAuth({ok, AppID}, {ok, ClientID}, {ok, RedirectURI}, {ok, 
 	end;
 unpackCredentialsAndDoAuth(_AppID, _ClientID, _RedirectURI, _Credentials) ->
 	bang_utilities:simpleResponse("Missing Arguments in POST", 404). 
-
-
-
-
-
-	% bang_session_db:doAuth(JSON).

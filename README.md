@@ -6,7 +6,7 @@ Bang is the beginning of a user management system, using REST and JSON. It curre
  1. **Create user**
 
  ```curl
- URL: $HOST/api/1.0/form-register-enterprise/
+ URL: $HOST/api/1.0/register/
  METHOD: POST
  BODY: {"username": "abc", "password": "def", "data":{ -- arbitrary JSON --}}
  RETURNS: 
@@ -130,28 +130,29 @@ I'm running 64-bit Erlang R16B on Mac OS 10.8.5. I'm also using the [erlang-rfc4
 ---------------------------------------------------------
 ## <a id="couchdb"></a>CouchDB: 
 
-I'm using CouchDB. The DB retrieval code depends on some custom CoucchDB views. I'll add some documenation regarding that later.
+I'm using CouchDB. The DB retrieval code depends on some custom CoucchDB views, so those will need to be set up before anything will work. I'll add some documenation regarding that later.
 
 
 ---------------------------------------------------------
-## <a id="curl"></a>CURL: 
+## <a id="curl"></a>curl: 
 
-I'm using curl to test right now. In the curl/ directory, you'll find several test scripts. It makes the most sense to run them in like this:
+I'm using curl to test right now. The tests are configured to run against localhost:4443. In the curl/ directory, you'll find several test scripts. It makes the most sense to run them n order like this:
 
  ```bash
- $ ./testCreate.sh POST IP  #create new user
- $ ./testCreate.sh GET IP VAL_ID #validate user from previous step
- $ ./testAuth.sh IP APP_ID CL_ID REDIRECT_URI UNAME PW #get auth code for validated user
- $ ./testToken.sh IP APP_ID CL_ID AUTH_CODE #exchange auth code for session token
+ $ ./testCreate.sh #create new user
+ $ ./testValidate.sh VAL_ID #validate user from previous step
+ $ ./testAuth.sh APP_ID CL_ID UNAME PW #get auth code for validated user
+ $ ./testToken.sh APP_ID CL_ID AUTH_CODE #exchange auth code for session token
  ```
 
 ---------------------------------------------------------
 ## <a id="todo"></a>TODO: 
 
-Well, there's lots to do, but here's my short list: 
+There's lots to do, but here's my short list: 
 
- 1. I want to add unit testing to the project to replace the curl scripts. 
- 2. There is no defined method for setting up valid redirect_uris, which are checked in the auth step, so something needs to be done there.
- 3. Better wrapping around erlang-rfc4627, so that I can pass and retrieve strings always, instead of converting back and forth between binary and list data types.
+ 1. Set up for OTP and rebar. The current build process is very messy.
+ 2. Add unit testing to the project to replace the curl scripts. 
+ 3. Do something about redirect uris. The auth step checks that the request contains a valid redirect_uri, but there is no way to create them yet, so currently the tests have a hardcoded dummy value.
+ 4. Better wrapping around erlang-rfc4627, so that I can pass and retrieve strings always, instead of converting back and forth between binary and list data types.
 
 

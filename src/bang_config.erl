@@ -2,6 +2,6 @@
 
 -export([authInterval/0, sessionInterval/0]).
 
-%%timeouts in seconds
-authInterval() -> 600.
-sessionInterval() -> 3600.
+%%timeouts in milliseconds
+authInterval() -> 600000.
+sessionInterval() -> 3600000.

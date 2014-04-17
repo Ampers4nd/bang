@@ -3,7 +3,7 @@
 
 %%add new user
 doInsert(EncryptedUName, EncryptedPW, UserType, Data) ->
-	error_logger:info_msg("!!!!!!!!!!!!!!Doing insert:~nUname: ~p~n PW: ~p~n UserType: ~p~n Data: ~p~n!!!!!!!!!!!!!!!!!!!!", [EncryptedUName, EncryptedPW, UserType, Data]),
+	% error_logger:info_msg("Doing insert:~nUname: ~p~n PW: ~p~n UserType: ~p~n Data: ~p~n", [EncryptedUName, EncryptedPW, UserType, Data]),
 	Body = {obj, [{"uname", list_to_binary(EncryptedUName)},
 					{"pw", list_to_binary(EncryptedPW)},
 					{"user_type", list_to_binary(UserType)},

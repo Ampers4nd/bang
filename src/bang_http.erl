@@ -25,6 +25,7 @@ get(User, PW, URL) ->
 	request(get, User, PW, URL, []).
 
 post(URL, Body) ->
+	error_logger:info_msg("Doing POST: ~p~nBody: ~p~n", [URL, Body]), 
 	httpc:request(post, 
 					{URL, headers(json), bang_json:contentType(), Body},
 		 			httpOptions(), 
@@ -38,7 +39,6 @@ put(URL, Body) ->
 					{URL, headers(json), bang_json:contentType(), Body},
 		 			httpOptions(), 
 		 			options()). 
-
 
 head(URL) ->
 	httpc:request(head,

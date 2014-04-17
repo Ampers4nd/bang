@@ -22,7 +22,7 @@ processCredentialResponse({ok, {{_Version, 200, _ReasonPhrase}, _Headers, Encode
             processRow(RedirectURIS, AppID, ClientID, RedirectURI);
         [] ->
             bang_utilities:simpleResponse("Invalid credentials", 401);
-        [_MultipleRows] -> %oops, there is more than one row returned for same credentials, that shouldn't be
+        [_MultipleRows] -> %oops, there is more than one row returned for same credentials, that shouldn't happen
             bang_utilities:simpleResponse("Credentials bound to multiple docs :-(", 500)
     end;
 processCredentialResponse({ok, {{_Version, _ResponseCode, _ReasonPhrase}, _Headers, _EncodedJSON}}, _AppID, _ClientID, _RedirectURI) ->
@@ -41,8 +41,7 @@ processRow(RedirectURIS, AppID, ClientID, RedirectURI) ->
 
 doAuthCodePost(AppID, ClientID) ->
     AuthCode = bang_crypto:randomBin(12, 36),
-    {MegaSecs, Secs, _MicroSecs} = os:timestamp(),
-    CreatedAt = MegaSecs * trunc(math:pow(10, 6)) + Secs,
+    CreatedAt = bang_utilities:currentTimestamp(milliseconds),
     Expires = CreatedAt + bang_config:authInterval(),
     Record = {obj, [{"application_id", list_to_binary(AppID)},
                     {"client_id", list_to_binary(ClientID)},
@@ -86,13 +85,11 @@ processTokenGET({ok, {{_Version, 200, _ReasonPhrase}, _Headers, EncodedJSON}}, A
             {ok, RowValue} = rfc4627:get_field(TheRow, "value"),
             {ok, ExpiresBin} = rfc4627:get_field(RowValue, "expires"),
             Expires = binary_to_integer(ExpiresBin), 
-            {MegaSecs, Secs, _MicroSecs} = os:timestamp(),
-            Now = MegaSecs * trunc(math:pow(10, 6)) + Secs,
+            Now = bang_utilities:currentTimestamp(milliseconds),
             {ok, IsValid} = rfc4627:get_field(RowValue, "is_valid"),
             error_logger:info_msg("is_valid: ~p~n", [IsValid]),
             case (IsValid and ((Now - Expires) =< 0)) of
                 true ->
-                    error_logger:info_msg("True!!!"), 
                     {ok, DocID} = rfc4627:get_field(TheRow, "id"),
                     spawn(bang_invalidate, invalidateAuth, [binary_to_list(DocID)]), %% auth_code is good for only one use
                     Token = bang_crypto:randomBin(12, 36),
@@ -106,7 +103,6 @@ processTokenGET({ok, {{_Version, 200, _ReasonPhrase}, _Headers, EncodedJSON}}, A
                     TokenPostRequest = bang_http:post(bang_private:couchSessionURL(), rfc4627:encode(Record)),
                     processTokenPOST(TokenPostRequest, AppID, ClientID, Token); 
                 false ->
-                    error_logger:info_msg("False!!!"),
                     bang_utilities:simpleResponse("Invalid Auth Code", 401)
             end;
         _ ->

@@ -4,7 +4,6 @@
 -export([out/1]).
 
 apiVersionString() -> "1.0".
-badRequestResponse() -> bang_utilities:simpleResponse("Oops. I don't see what you're looking for...", 404).
 fourzerofour() -> bang_utilities:simpleResponse("Oops. I don't see what you're looking for...", 404).
 
 %%application entry point
@@ -17,18 +16,18 @@ out(Arg) ->
 
 %%valid paths start with /api/1.0/
 processBasePath([], _Arg) ->
-	badRequestResponse();
+	fourzerofour();
 processBasePath(Path, Arg) ->
 	[Root | Rest] = Path,
 	case string:to_lower(Root) of
 		"api" ->
 			processApiPath(Rest, Arg);
 		_ ->
-			badRequestResponse()
+			fourzerofour()
 	end.
 
 processApiPath([], _Arg) ->
-	badRequestResponse();
+	fourzerofour();
 processApiPath(Path, Arg) ->
 	APIVersion = apiVersionString(),
 	[Root | Rest] = Path,
@@ -36,23 +35,23 @@ processApiPath(Path, Arg) ->
 		APIVersion ->
 			processRequestPath(Rest, Arg);
 		_ -> 
-			badRequestResponse()
+			fourzerofour()
 	end.
 
 processRequestPath([], _Arg) ->
-	badRequestResponse();
+	fourzerofour();
 processRequestPath(Path, Arg) ->
 			[Root | Rest] = Path, 
 			case string:to_lower(Root) of 
-				"" ->
+				"hello" ->
 					bang_utilities:simpleResponse("Hello", 200); 
-				"form-register-enterprise" -> %user registration resource
+				"register" -> %user registration resource
 					error_logger:info_msg("Processing user request...~n"),
 			        bang_register:handle(Arg, Rest); 
-			    "validation" -> %validation resource for post-registration
+			    "validation" -> %post-registration validation resource
 			    	error_logger:info_msg("Processing validation request...~n"),
 			    	bang_validate:handle(Arg, Rest);			        
-			    "form-sign-in" -> %sign-in resource
+			    "sign-in" -> %sign-in resource
 			    	error_logger:info_msg("Processing login request...~n"),
 			    	bang_session_auth:handle(Arg, Rest);
 			    "session-token" -> %session token

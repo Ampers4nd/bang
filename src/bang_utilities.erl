@@ -1,6 +1,6 @@
 -module(bang_utilities).
 
--export([path/1, method/1, headers/1, simpleResponse/2, jsonEncodedResponse/2, listContainsValue/2, randomAppID/0, randomClientID/0]).
+-export([path/1, method/1, headers/1, simpleResponse/2, jsonEncodedResponse/2, listContainsValue/2, randomAppID/0, randomClientID/0, currentTimestamp/1]).
 -include("../include/yaws_api.hrl").
 
 method(Arg) ->
@@ -42,3 +42,11 @@ randomAppID() ->
 
 randomClientID() ->
 	"CL_" ++ bang_crypto:randomString(13, 36).
+
+currentTimestamp(seconds) ->
+	{MegaSecs, Secs, _MicroSecs} = os:timestamp(),
+	MegaSecs * trunc(math:pow(10, 6)) + Secs;
+currentTimestamp(milliseconds) ->
+	{MegaSecs, Secs, MicroSecs} = os:timestamp(),
+	trunc(MegaSecs * math:pow(10, 9) + Secs * math:pow(10, 3) + MicroSecs/1000).
+
