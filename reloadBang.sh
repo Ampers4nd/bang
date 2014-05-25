@@ -4,15 +4,26 @@ pwd=`pwd`
 srcDir=./src
 ebinDir=./ebin
 filename="*.erl"
+
+bangincludeDir=./include
+yawsincludeDir=/usr/lib/yaws/include
+
 doterlang=~/.erlang
 doterlangpatha='code:add_patha("'`pwd`'/ebin").'
 doterlangpathamatch=`grep -F "${doterlangpatha}" $doterlang`
+
 
 # create directory for binaries
 if [ ! -d $ebinDir ]; then
     echo "[...] create: ${ebinDir}"
     mkdir $ebinDir
 fi
+
+if [ ! -d $bangincludeDir ]; then
+    echo "[...] create ${bangincludeDir}"
+    ln -s $yawsincludeDir $bangincludeDir    
+fi
+##/usr/lib/yaws/include
 
 if [ ! -f $doterlang ]; then
     echo "[...] create: ${doterlang}"

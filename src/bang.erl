@@ -8,10 +8,25 @@ fourzerofour() -> bang_utilities:simpleResponse("Oops. I don't see what you're l
 
 %%application entry point
 %%out/1 is called by yaws when it receives a request
+
+%% http://stackoverflow.com/questions/20456578/routing-in-yaws
+%%out(Arg) ->
+    %% Uri = yaws_api:request_url(Arg),
+    %% defined in yaws_api.hrl
+    %% {url,"http","localhost",8000,"/",[]}
+    %% Path = string:tokens(Uri#url.path, "/"),
+%    Method = (Arg#arg.req)#http_request.method,
+    %% error_logger:info_msg("Path info: port", Path),
+    %% error_logger:info_msg("Path info: port", Uri#url.port),
+    %% error_logger:info_msg("Path info: host", Uri#url.host),
+    %% error_logger:info_msg("Path info: ----", Arg#arg.pathinfo),
+    %% error_logger:info_msg("Path info: path", Uri#url.path).
+%%    out(Arg, Method, Path).
+
 out(Arg) ->
-      error_logger:info_msg("Path info: ~p~n", [Arg#arg.pathinfo]),	
-	Path = bang_utilities:path(Arg#arg.pathinfo),
-	processBasePath(Path, Arg).
+    error_logger:info_msg("Path info: ~p~n", [Arg#arg.pathinfo]),
+    Path = bang_utilities:path(Arg#arg.pathinfo),
+    processBasePath(Path, Arg).
 
 
 %%valid paths start with /api/1.0/

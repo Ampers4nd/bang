@@ -167,7 +167,7 @@ There's lots to do, but here's my short list:
 ## Erlang
 
  * **Install [erlang][20]**
-   ```
+   ```bash
    $ sudo apt-get install erlang
    ```
 
@@ -175,14 +175,14 @@ There's lots to do, but here's my short list:
 
  * **Install [yaws][21] http server**
 
-   ```
+   ```bash
    $ sudo apt-get install yaws
    ```
 
    or Download and build the yaws source [as recommended][23].
 
 
-   ```
+   ```bash
    $ git clone git://github.com/klacke/yaws.git
    $ cd yaws
    $ autoconf
@@ -197,12 +197,12 @@ There's lots to do, but here's my short list:
    ```
 
  * **Start and test the service**
-   ```
+   ```bash
    $ yaws -i
    ```
 
    Created directories and files owned by group 'yaws' may be inaccessible. Add yourself to the yaws group.
-   ```
+   ```bash
    $ sudo usermod -a -G yaws duko
    ```
    
@@ -212,18 +212,35 @@ There's lots to do, but here's my short list:
 ## CouchDB
 
  * **Install [couchdb][22]**
-   ```
+   ```bash
    $ sudo apt-get install couchdb
    $ couchdb -V
    couchdb - Apache CouchDB 1.5.0
    ```
 
  * **Start and test the service**
-   ```
+   ```bash
    $ sudo service couchdb start
    ```
 
    Test a response by requesting a page from http://127.0.0.1:5984/ The configuration file is `/etc/couchdb/local.ini`.
+
+
+## erlang-rfc4627
+
+ [erlang-rfc4627][25] is used to process JSON.
+
+ * **Install erlang-rfc4627**
+   ```bash
+   $ git clone https://github.com/tonyg/erlang-rfc4627.git
+   $ cd erlang-rfc4627
+   $ make all test-compile
+   ```
+
+   *~/.erlang*
+   ```erlang
+   code:add_patha("/path/to/erlang-rfc4627/ebin/").
+   ```
 
 
 -----------------------------------------
@@ -289,47 +306,6 @@ $ openssl x509 -req -in server-csr.pem -signkey server-key.pem -out server-cert.
 ```
 
 After you've started yaws, `$ bash ./reloadBang.sh` then visit `localhost:8000/api/1.0/teapot`
-[...] compile: ./src/bang_mail.erl
-[...] compile: ./src/bang_session_auth.erl
-[...] compile: ./src/bang_utilities.erl
-[...] compile: ./src/bang_invalidate.erl
-[...] compile: ./src/bang_http.erl
-[...] compile: ./src/bang_session_profile.erl
-[...] compile: ./src/bang_config.erl
-[...] compile: ./src/bang_validate.erl
-[...] compile: ./src/bang_register_db.erl
-[...] compile: ./src/bang_session_token.erl
-[...] compile: ./src/bang.erl
-[...] compile: ./src/bang_socket.erl
-[...] compile: ./src/bang_add_redirect_db.erl
-[...] compile: ./src/bang_crypto.erl
-[...] compile: ./src/bang_json.erl
-[...] compile: ./src/bang_register.erl
-[...] compile: ./src/bang_session_db.erl
-[...] compile: ./src/bang_room.erl
-[...] compile: ./src/bang_message.erl
-[...] compile: ./src/bang_add_redirect.erl
-[{module,bang_mail}]
-[{module,bang_session_auth}]
-[{module,bang_utilities}]
-[{module,bang_invalidate}]
-[{module,bang_http}]
-[{module,bang_session_profile}]
-[{module,bang_config}]
-[{module,bang_validate}]
-[{module,bang_register_db}]
-[{module,bang_session_token}]
-[{module,bang}]
-[{module,bang_socket}]
-[{module,bang_add_redirect_db}]
-[{module,bang_crypto}]
-[{module,bang_json}]
-[{module,bang_register}]
-[{module,bang_session_db}]
-[{module,bang_room}]
-[{module,bang_message}]
-[{module,bang_add_redirect}]
-```
 
 
 [20]: http://www.erlang.org/                            "erlang"
@@ -337,4 +313,5 @@ After you've started yaws, `$ bash ./reloadBang.sh` then visit `localhost:8000/a
 [22]: http://couchdb.apache.org/                       "couchdb"
 [23]: http://yaws.hyber.org/configuration.yaws      "yaws setup"
 [24]: https://bitbucket.org/etc/erlang-web/src/248534cbc1dfd0485aaf145f013698672a7e6f45/lib/yaws-1.80/include/yaws_api.hrl?at=eptic-1.3
+[25]: https://github.com/tonyg/erlang-rfc4627   "erlang-rfc4627"
 
