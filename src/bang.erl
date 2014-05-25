@@ -9,7 +9,7 @@ fourzerofour() -> bang_utilities:simpleResponse("Oops. I don't see what you're l
 %%application entry point
 %%out/1 is called by yaws when it receives a request
 out(Arg) ->
-    error_logger:info_msg("Path info: ~p~n", [Arg#arg.pathinfo]),	
+      error_logger:info_msg("Path info: ~p~n", [Arg#arg.pathinfo]),	
 	Path = bang_utilities:path(Arg#arg.pathinfo),
 	processBasePath(Path, Arg).
 

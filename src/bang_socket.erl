@@ -4,19 +4,19 @@
 -export([handle/2, isSocketRequest/1, handle_message/1, say_hi/1]).
 
 handle(Arg, _Path) ->
-	error_logger:info_msg("Received socket request. Checking header"),
-	case isSocketRequest(Arg#arg.headers) of
-		true ->
-			error_logger:info_msg("Received websocket request"), 
-			[{status, 101}, 
-			{websocket, bang_socket, []}];
-		false ->
-			Record = {obj, [{"error", <<"Socket request missing upgrade header">>}]},
-			Response = rfc4627:encode(Record),
-			[{html, Response},
-			bang_json:contentHeader(),
-			{status, 400}]
-	end.
+    error_logger:info_msg("Received socket request. Checking header"),
+    case isSocketRequest(Arg#arg.headers) of
+        true ->
+            error_logger:info_msg("Received websocket request"), 
+            [{status, 101}, 
+             {websocket, bang_socket, []}];
+        false ->
+            Record = {obj, [{"error", <<"Socket request missing upgrade header">>}]},
+            Response = rfc4627:encode(Record),
+            [{html, Response},
+             bang_json:contentHeader(),
+             {status, 400}]
+    end.
 
 isSocketRequest(#headers{other=L}) ->
 	error_logger:info_msg("Chekcing request~n"),

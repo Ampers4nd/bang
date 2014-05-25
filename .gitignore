@@ -6,3 +6,4 @@ bang_socket.yaws
 include/yaws_api.hrl
 src/bang_private.erl
 README.html
+include

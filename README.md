@@ -156,3 +156,185 @@ There's lots to do, but here's my short list:
  4. Better wrapping around erlang-rfc4627, so that I can pass and retrieve strings always, instead of converting back and forth between binary and list data types.
 
 
+
+
+-----------------------------------------
+# Getting Dependencies
+
+`bang` uses Erlang, Yaws and CouchDB.
+
+
+## Erlang
+
+ * **Install [erlang][20]**
+   ```
+   $ sudo apt-get install erlang
+   ```
+
+## Yaws
+
+ * **Install [yaws][21] http server**
+
+   ```
+   $ sudo apt-get install yaws
+   ```
+
+   or Download and build the yaws source [as recommended][23].
+
+
+   ```
+   $ git clone git://github.com/klacke/yaws.git
+   $ cd yaws
+   $ autoconf
+   $ ./configure --help
+   $ ./configure --prefix=/usr/local
+   $ make
+   $ make install
+   
+   $ sudo apt-get install yaws
+   $ yaws --version
+   Yaws 1.98
+   ```
+
+ * **Start and test the service**
+   ```
+   $ yaws -i
+   ```
+
+   Created directories and files owned by group 'yaws' may be inaccessible. Add yourself to the yaws group.
+   ```
+   $ sudo usermod -a -G yaws duko
+   ```
+   
+   Test a response by requesting a page from http://127.0.0.1:8080. The configuration file is `/etc/yaws/conf.d/localhost.conf`.
+
+
+## CouchDB
+
+ * **Install [couchdb][22]**
+   ```
+   $ sudo apt-get install couchdb
+   $ couchdb -V
+   couchdb - Apache CouchDB 1.5.0
+   ```
+
+ * **Start and test the service**
+   ```
+   $ sudo service couchdb start
+   ```
+
+   Test a response by requesting a page from http://127.0.0.1:5984/ The configuration file is `/etc/couchdb/local.ini`.
+
+
+-----------------------------------------
+# Get Started
+
+Edit yaws configuration files to use `bang`.
+
+*/etc/yaws/conf.avail/localhost.conf*
+```xml
+<server localhost>
+  port = 8000
+  listen = 0.0.0.0
+  docroot = /path/to/bang
+  dir_listings = true
+  auth_log = true
+  statistics = true
+  appmods = </, bang>
+</server>
+```
+
+*/etc/yaws/conf.avail/localhost-ssl.conf*
+```xml
+<server localhost>
+  port = 4443
+  docroot = /path/to/bang
+  listen = 0.0.0.0
+  dir_listings = true
+  auth_log = true
+  <ssl>
+    keyfile = /etc/yaws/yaws-key.pem
+    certfile = /etc/yaws/yaws-cert.pem
+  </ssl>
+</server>
+```
+
+Run yaws with the defined configuration
+```bash
+$ yaws -i --conf /etc/yaws/yaws.conf
+```
+
+If you installed yaws with a package manager, you may find yaws only starts as root due to file permissions.
+
+The cert files on Ubuntu are symlinks to files owned by root
+```bash
+yaws-cert.pem -> ../ssl/certs/ssl-cert-snakeoil.pem
+yaws-key.pem -> ../ssl/private/ssl-cert-snakeoil.key
+```
+
+Make new keys to reference in the configuration file, or Change permissions of these files to the yaws group. Do it for a development environment -not recommended for a production environment
+```bash
+sudo chown :yaws /etc/ssl
+sudo chown :yaws /etc/ssl/certs
+sudo chown :yaws /etc/ssl/certs/ssl-cert-snakeoil.pem
+sudo chown :yaws /etc/ssl/private
+sudo chown :yaws /etc/ssl/private/ssl-cert-snakeoil.key
+```
+
+Fake keys can be made with openssl
+```bash
+$ openssl genrsa -out server-key.pem 1024
+$ openssl req -new -key server-key.pem -out server-csr.pem
+$ openssl x509 -req -in server-csr.pem -signkey server-key.pem -out server-cert.pem
+```
+
+After you've started yaws, `$ bash ./reloadBang.sh` then visit `localhost:8000/api/1.0/teapot`
+[...] compile: ./src/bang_mail.erl
+[...] compile: ./src/bang_session_auth.erl
+[...] compile: ./src/bang_utilities.erl
+[...] compile: ./src/bang_invalidate.erl
+[...] compile: ./src/bang_http.erl
+[...] compile: ./src/bang_session_profile.erl
+[...] compile: ./src/bang_config.erl
+[...] compile: ./src/bang_validate.erl
+[...] compile: ./src/bang_register_db.erl
+[...] compile: ./src/bang_session_token.erl
+[...] compile: ./src/bang.erl
+[...] compile: ./src/bang_socket.erl
+[...] compile: ./src/bang_add_redirect_db.erl
+[...] compile: ./src/bang_crypto.erl
+[...] compile: ./src/bang_json.erl
+[...] compile: ./src/bang_register.erl
+[...] compile: ./src/bang_session_db.erl
+[...] compile: ./src/bang_room.erl
+[...] compile: ./src/bang_message.erl
+[...] compile: ./src/bang_add_redirect.erl
+[{module,bang_mail}]
+[{module,bang_session_auth}]
+[{module,bang_utilities}]
+[{module,bang_invalidate}]
+[{module,bang_http}]
+[{module,bang_session_profile}]
+[{module,bang_config}]
+[{module,bang_validate}]
+[{module,bang_register_db}]
+[{module,bang_session_token}]
+[{module,bang}]
+[{module,bang_socket}]
+[{module,bang_add_redirect_db}]
+[{module,bang_crypto}]
+[{module,bang_json}]
+[{module,bang_register}]
+[{module,bang_session_db}]
+[{module,bang_room}]
+[{module,bang_message}]
+[{module,bang_add_redirect}]
+```
+
+
+[20]: http://www.erlang.org/                            "erlang"
+[21]: http://yaws.hyber.org/                              "yaws"
+[22]: http://couchdb.apache.org/                       "couchdb"
+[23]: http://yaws.hyber.org/configuration.yaws      "yaws setup"
+[24]: https://bitbucket.org/etc/erlang-web/src/248534cbc1dfd0485aaf145f013698672a7e6f45/lib/yaws-1.80/include/yaws_api.hrl?at=eptic-1.3
+

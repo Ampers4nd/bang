@@ -1,20 +1,46 @@
 #!/bin/bash
 
+pwd=`pwd`
+srcDir=./src
+ebinDir=./ebin
+filename="*.erl"
+doterlang=~/.erlang
+doterlangpatha='code:add_patha("'`pwd`'/ebin").'
+doterlangpathamatch=`grep -F "${doterlangpatha}" $doterlang`
 
-PWD=`pwd`
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd ${DIR}/src
-
-if [ $# -eq 0 ]; then
-    ERLS=`ls *.erl`
-else
-    ERLS=$@
+# create directory for binaries
+if [ ! -d $ebinDir ]; then
+    echo "[...] create: ${ebinDir}"
+    mkdir $ebinDir
 fi
 
-for erl in $ERLS; do
-    filename="${erl%.*}"
-    erlc ${filename}.erl
-    mv ${filename}.beam ../ebin/
-    yaws --load ${filename}
+if [ ! -f $doterlang ]; then
+    echo "[...] create: ${doterlang}"
+    touch $doterlang
+fi
+
+if [ ! -n $doterlangpathamatch ]; then
+    echo "[...] modify: (add bang) ${doterlang}"
+    echo $doterlangpatha >> $doterlang
+fi
+
+
+
+OLDIFS=$IFS
+IFS=$'\n' # save and change IFS
+fileArr=($(find $inputDir -name "${filename}"))
+IFS=$OLDIFS # restore it
+
+tLen=${#fileArr[@]}
+for ((i=0; i<${tLen}; i++)); do
+    echo "[...] compile: ${fileArr[$i]}"
+    erlc -o $ebinDir ${fileArr[$i]}.erl 
 done
-cd $PWD
+
+for ((i=0; i<${tLen}; i++)); do
+    #echo "[...] load: " $(basename ${fileArr[$i]%.*})
+    yaws --load $(basename ${fileArr[$i]%.*})
+done
+
+
+
